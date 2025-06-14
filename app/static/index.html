@@ -55,15 +55,15 @@
             border: 2px solid rgba(0, 255, 255, 0.3);
             z-index: 20;
             pointer-events: none;
-            box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
         }
         .corner-border.top-left { top: 1.5rem; left: 1.5rem; border-right: none; border-bottom: none; }
         .corner-border.top-right { top: 1.5rem; right: 1.5rem; border-left: none; border-bottom: none; }
         .corner-border.bottom-left { bottom: 1.5rem; left: 1.5rem; border-right: none; border-top: none; }
         .corner-border.bottom-right { bottom: 1.5rem; right: 1.5rem; border-left: none; border-top: none; }
-        
+
         /* Glass panel effect for header */
         .header-panel {
+            margin-top: 1.6rem;
             background-color: rgba(10, 20, 25, 0.15);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
@@ -118,6 +118,126 @@
             margin-right: 2rem;
             height: fit-content;
         }
+
+        /* Dynamic Island Styling */
+        .dynamic-island {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(10, 20, 25, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 50px;
+            width: 120px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .dynamic-island:hover {
+            width: 260px;
+            height: 60px;
+            border-radius: 30px;
+            background-color: rgba(10, 20, 25, 0.8);
+            border-color: rgba(0, 255, 255, 0.4);
+        }
+        
+        .island-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .island-icon {
+            width: 24px;
+            height: 24px;
+            color: rgba(0, 255, 255, 0.8);
+            transition: transform 0.3s ease;
+        }
+        
+        .island-expanded-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            padding: 0 20px;
+        }
+        
+        .dynamic-island:hover .island-expanded-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .dynamic-island:hover .island-icon-default {
+            transform: scale(0);
+            opacity: 0;
+            position: absolute;
+        }
+        
+        .tool-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px 15px;
+            border-radius: 16px;
+            transition: all 0.2s ease;
+            color: rgba(0, 255, 255, 0.8);
+        }
+        
+        .tool-button:hover {
+            background-color: rgba(0, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .tool-button span {
+            font-size: 10px;
+            margin-top: 3px;
+            color: rgba(0, 255, 255, 0.7);
+        }
+
+        .dots-container {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: rgba(0, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: dotPulse 1.5s infinite;
+        }
+        
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="text-white">
@@ -130,6 +250,31 @@
 
     <!-- Container for the three.js canvas -->
     <div id="canvas-container"></div>
+
+    <!-- Dynamic Island -->
+    <div class="dynamic-island">
+        <div class="island-content">
+            <div class="dots-container island-icon-default">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div class="island-expanded-content">
+                <a href="pomodoro.html" class="tool-button">
+                    <svg class="island-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Pomodoro</span>
+                </a>
+                <a href="tasklist.html" class="tool-button">
+                    <svg class="island-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    <span>Tasks</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Main UI Content -->
     <div class="relative z-10 flex flex-col min-h-screen p-6 sm:p-8">
@@ -334,6 +479,74 @@
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('touchmove', (e) => {
              if (e.touches.length > 0) onMouseMove(e.touches[0]);
+        });
+
+        // Dynamic Island Animation
+        const dynamicIsland = document.querySelector('.dynamic-island');
+        
+        // Add subtle pulse animation to dynamic island
+        let islandPulseInterval;
+        
+        function startIslandPulse() {
+            clearInterval(islandPulseInterval);
+            let scale = 1;
+            let growing = false;
+            islandPulseInterval = setInterval(() => {
+                if (growing) {
+                    scale += 0.003;
+                    if (scale >= 1.03) growing = false;
+                } else {
+                    scale -= 0.003;
+                    if (scale <= 1) growing = true;
+                }
+                dynamicIsland.style.transform = `translateX(-50%) scale(${scale})`;
+            }, 50);
+        }
+        
+        // Start the subtle pulse animation
+        startIslandPulse();
+        
+        // Stop the pulse animation when hovering
+        dynamicIsland.addEventListener('mouseenter', () => {
+            clearInterval(islandPulseInterval);
+            dynamicIsland.style.transform = 'translateX(-50%) scale(1)';
+        });
+        
+        // Resume pulse when mouse leaves
+        dynamicIsland.addEventListener('mouseleave', () => {
+            startIslandPulse();
+        });
+        
+        // Touch device support
+        dynamicIsland.addEventListener('touchstart', (e) => {
+            // Prevent default action to avoid any unwanted behavior
+            e.preventDefault();
+            // Toggle an active class that mimics hover for touch devices
+            dynamicIsland.classList.toggle('active');
+            
+            // Apply hover styles manually if active
+            if (dynamicIsland.classList.contains('active')) {
+                clearInterval(islandPulseInterval);
+                dynamicIsland.style.width = '260px';
+                dynamicIsland.style.height = '60px';
+                dynamicIsland.style.borderRadius = '30px';
+                dynamicIsland.querySelector('.island-expanded-content').style.opacity = '1';
+                dynamicIsland.querySelector('.island-expanded-content').style.transform = 'translateY(0)';
+                dynamicIsland.querySelector('.island-icon-default').style.transform = 'scale(0)';
+                dynamicIsland.querySelector('.island-icon-default').style.opacity = '0';
+            } else {
+                // Restore default styles
+                dynamicIsland.style.width = '120px';
+                dynamicIsland.style.height = '38px';
+                dynamicIsland.style.borderRadius = '50px';
+                dynamicIsland.querySelector('.island-expanded-content').style.opacity = '0';
+                dynamicIsland.querySelector('.island-expanded-content').style.transform = 'translateY(10px)';
+                dynamicIsland.querySelector('.island-icon-default').style.transform = 'scale(1)';
+                dynamicIsland.querySelector('.island-icon-default').style.opacity = '1';
+                
+                // Resume pulse animation
+                startIslandPulse();
+            }
         });
 
         toggleChatPopupButton.addEventListener('click', () => {
