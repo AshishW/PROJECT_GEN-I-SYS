@@ -4,6 +4,9 @@ let activeSidebars = {
     right: false
 };
 
+// Import sound utilities
+import { playSound } from './sound-utils.js';
+
 let componentsLoaded = {
     pomodoro: false,
     tasklist: false
@@ -54,6 +57,9 @@ function handleResponsiveChange() {
 window.toggleSidebar = function(side) {
     const sidebar = document.getElementById(side === 'left' ? 'leftSidebar' : 'rightSidebar');
     const isOpen = activeSidebars[side];
+    
+    // Play sound effect
+    playSound('dynamicIsland');
     
     if (isOpen) {
         closeSidebar(side);
@@ -109,6 +115,8 @@ window.closeSidebar = function(side) {
     }
     
     updateMainContentPosition();
+    // Play sound effect when sidebar is closed
+    playSound('uiInteract');
 };
 
 function updateMainContentPosition() {
@@ -605,11 +613,20 @@ function initializePomodoroWith3D() {
         clearInterval(timerInterval);
     };
     
-    // Event Listeners
-    startPauseBtn.addEventListener('click', () => isRunning ? pauseTimer() : startTimer());
-    resetBtn.addEventListener('click', () => switchMode(currentMode));
+    // Event Listeners with sound effects
+    startPauseBtn.addEventListener('click', () => {
+        playSound('uiInteract');
+        isRunning ? pauseTimer() : startTimer();
+    });
+    
+    resetBtn.addEventListener('click', () => {
+        playSound('uiInteract');
+        switchMode(currentMode);
+    });
+    
     modeSelector.addEventListener('click', (e) => {
         if(e.target.tagName === 'BUTTON'){
+            playSound('uiInteract');
             switchMode(e.target.dataset.mode);
         }
     });
@@ -1017,11 +1034,12 @@ function initializeTasklistWith3D() {
         }
     }
     
-    // Event Handlers
+    // Event Handlers with sound effects
     addTaskForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const taskText = taskInput.value.trim();
         if (taskText) {
+            playSound('uiInteract');
             tasks.push({
                 id: Date.now(),
                 text: taskText,
@@ -1046,13 +1064,17 @@ function initializeTasklistWith3D() {
         if (taskIndex === -1) return;
 
         if (action === 'delete') {
+            playSound('uiInteract');
             tasks.splice(taskIndex, 1);
         } else if (action === 'complete') {
+            // Play task completion sound
+            playSound('taskComplete');
             tasks[taskIndex].completed = true;
             const today = new Date().toISOString().split('T')[0];
             heatmapData[today] = (heatmapData[today] || 0) + 1;
         } else if (action === 'reactivate') {
-             tasks[taskIndex].completed = false;
+            playSound('uiInteract');
+            tasks[taskIndex].completed = false;
         }
         
         saveState();
@@ -1062,14 +1084,15 @@ function initializeTasklistWith3D() {
     });
     
     filterButtons.addEventListener('click', (e) => {
-         const button = e.target.closest('button[data-filter]');
-         if(!button) return;
-         
-         filterButtons.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-         button.classList.add('active');
-         
-         currentFilter = button.dataset.filter;
-         renderTasks();
+        const button = e.target.closest('button[data-filter]');
+        if(!button) return;
+        
+        playSound('uiInteract');
+        filterButtons.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        currentFilter = button.dataset.filter;
+        renderTasks();
     });
 
     // Animation Loop

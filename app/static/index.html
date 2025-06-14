@@ -423,6 +423,9 @@
 
     <script type="module" src="/static/js/components.js"></script>
     <script type="module">
+        // Import sound utilities
+        import { playSound } from '/static/js/sound-utils.js';
+        
         // --- Compatibility Check ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -566,7 +569,14 @@
         }
 
         // --- Event Listeners ---
-        if (isSupported) micButton.addEventListener('click', toggleListening);
+        if (isSupported) {
+            micButton.addEventListener('click', () => {
+                // Play mic click sound
+                playSound('micClick');
+                toggleListening();
+            });
+        }
+        
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('touchmove', (e) => {
@@ -610,11 +620,15 @@
         });
 
         toggleChatPopupButton.addEventListener('click', () => {
+            // Play UI interaction sound
+            playSound('uiInteract');
             chatPopupOverlay.classList.remove('hidden');
             chatPopupOverlay.classList.remove('opacity-0'); // For smooth transition if using opacity
         });
 
         closeChatPopupButton.addEventListener('click', () => {
+            // Play UI interaction sound
+            playSound('uiInteract');
             chatPopupOverlay.classList.add('hidden');
             chatPopupOverlay.classList.add('opacity-0'); // For smooth transition
         });
@@ -706,19 +720,27 @@
             document.addEventListener('keydown', function(e) {
                 // Escape key closes all sidebars
                 if (e.key === 'Escape') {
-                    if (window.activeSidebars && window.activeSidebars.left) window.closeSidebar('left');
-                    if (window.activeSidebars && window.activeSidebars.right) window.closeSidebar('right');
+                    if (window.activeSidebars && window.activeSidebars.left) {
+                        playSound('uiInteract');
+                        window.closeSidebar('left');
+                    }
+                    if (window.activeSidebars && window.activeSidebars.right) {
+                        playSound('uiInteract');
+                        window.closeSidebar('right');
+                    }
                 }
                 
                 // Alt + P opens Pomodoro
                 if (e.altKey && e.key === 'p') {
                     e.preventDefault();
+                    playSound('dynamicIsland');
                     window.toggleSidebar('left');
                 }
                 
                 // Alt + T opens Tasks
                 if (e.altKey && e.key === 't') {
                     e.preventDefault();
+                    playSound('dynamicIsland');
                     window.toggleSidebar('right');
                 }
             });

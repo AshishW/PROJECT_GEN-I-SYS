@@ -2,6 +2,9 @@
  * app.js: JS code for the voice assistant app.
  */
 
+// Import sound utilities
+import { playSound } from './sound-utils.js';
+
 /**
  * SSE (Server-Sent Events) handling
  */
@@ -110,6 +113,9 @@ function addSubmitHandler() {
     e.preventDefault();
     const message = messageInput.value;
     if (message) {
+      // Play UI interaction sound when sending a message
+      playSound('uiInteract');
+      
       const p = document.createElement("p");
       p.textContent = "> " + message;
       messagesDiv.appendChild(p);
@@ -193,6 +199,9 @@ function startAudio() {
 // (due to the gesture requirement for the Web Audio API)
 const startAudioButton = document.getElementById("startAudioButton");
 startAudioButton.addEventListener("click", () => {
+  // Play mic click sound
+  playSound('micClick');
+  
   startAudioButton.disabled = true;
   startAudio();
   is_audio = true;
