@@ -10,15 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet"> -->
     <style>
         body {
             font-family:monospace, 'Courier New', Courier;
             background-color: #0a0a0f;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-            
-            /* Making text non-selectable */
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -32,6 +29,80 @@
             height: 100%;
             z-index: 0;
         }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            width: 400px;
+            background-color: rgba(10, 20, 25, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 15;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .sidebar-left {
+            left: 0;
+            transform: translateX(-100%);
+            border-right: 1px solid rgba(0, 255, 255, 0.2);
+            border-left: none;
+        }
+        
+        .sidebar-right {
+            right: 0;
+            transform: translateX(100%);
+            border-left: 1px solid rgba(0, 255, 255, 0.2);
+            border-right: none;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .sidebar-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(0, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .sidebar-close-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Adjust main content when sidebars are open */
+        .content-shifted-left {
+            transform: translateX(200px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .content-shifted-right {
+            transform: translateX(-200px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .content-shifted-both {
+            transform: scale(0.6);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
         .text-glow {
             text-shadow: 0 0 8px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.5);
         }
@@ -86,7 +157,6 @@
         #messages::-webkit-scrollbar-thumb:hover {
             background-color: rgba(0, 255, 255, 0.5);
         }
-
 
         @media (min-width: 640px) {
             .corner-border {
@@ -195,6 +265,7 @@
             border-radius: 16px;
             transition: all 0.2s ease;
             color: rgba(0, 255, 255, 0.8);
+            text-decoration: none;
         }
         
         .tool-button:hover {
@@ -238,6 +309,11 @@
             0%, 100% { opacity: 0.4; transform: scale(0.8); }
             50% { opacity: 1; transform: scale(1); }
         }
+
+        /* Component specific styles will be added dynamically */
+        .component-styles {
+            /* Styles will be injected here */
+        }
     </style>
 </head>
 <body class="text-white">
@@ -247,6 +323,22 @@
     <div class="corner-border top-right"></div>
     <div class="corner-border bottom-left"></div>
     <div class="corner-border bottom-right"></div>
+
+    <!-- Left Sidebar - Pomodoro -->
+    <div id="leftSidebar" class="sidebar sidebar-left">
+        <button class="sidebar-close-btn" onclick="closeSidebar('left')">×</button>
+        <div id="pomodoroContainer">
+            <!-- Pomodoro content will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Right Sidebar - Tasks -->
+    <div id="rightSidebar" class="sidebar sidebar-right">
+        <button class="sidebar-close-btn" onclick="closeSidebar('right')">×</button>
+        <div id="tasklistContainer">
+            <!-- Tasklist content will be loaded here -->
+        </div>
+    </div>
 
     <!-- Container for the three.js canvas -->
     <div id="canvas-container"></div>
@@ -260,29 +352,28 @@
                 <div class="dot"></div>
             </div>
             <div class="island-expanded-content">
-                <a href="pomodoro.html" class="tool-button">
+                <button class="tool-button" onclick="toggleSidebar('left')">
                     <svg class="island-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <span>Pomodoro</span>
-                </a>
-                <a href="tasklist.html" class="tool-button">
+                </button>
+                <button class="tool-button" onclick="toggleSidebar('right')">
                     <svg class="island-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                     </svg>
                     <span>Tasks</span>
-                </a>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Main UI Content -->
-    <div class="relative z-10 flex flex-col min-h-screen p-6 sm:p-8">
+    <div id="mainContent" class="relative z-10 flex flex-col min-h-screen p-6 sm:p-8">
         
         <!-- Header Text with new glass panel -->
         <header class="w-full flex justify-center">
             <div class="header-panel flex flex-col items-center justify-center space-x-4">
-                <!-- <h1 id="title" class="text-4xl sm:text-5xl font-bold text-glow transition-opacity duration-500">GEN-I-SYS</h1> -->
                 <img src="/static/assets/images/GEN-I-SYS_logo.png" alt="GEN-I-SYS Logo" class="h-12 sm:h-16">
                 <p id="status" class="text-base sm:text-lg text-cyan-200 transition-all duration-300 h-8 mt-3">General Intelligence System</p>
             </div>
@@ -330,6 +421,7 @@
         </div>
     </div>
 
+    <script type="module" src="/static/js/components.js"></script>
     <script type="module">
         // --- Compatibility Check ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -516,38 +608,6 @@
         dynamicIsland.addEventListener('mouseleave', () => {
             startIslandPulse();
         });
-        
-        // Touch device support
-        dynamicIsland.addEventListener('touchstart', (e) => {
-            // Prevent default action to avoid any unwanted behavior
-            e.preventDefault();
-            // Toggle an active class that mimics hover for touch devices
-            dynamicIsland.classList.toggle('active');
-            
-            // Apply hover styles manually if active
-            if (dynamicIsland.classList.contains('active')) {
-                clearInterval(islandPulseInterval);
-                dynamicIsland.style.width = '260px';
-                dynamicIsland.style.height = '60px';
-                dynamicIsland.style.borderRadius = '30px';
-                dynamicIsland.querySelector('.island-expanded-content').style.opacity = '1';
-                dynamicIsland.querySelector('.island-expanded-content').style.transform = 'translateY(0)';
-                dynamicIsland.querySelector('.island-icon-default').style.transform = 'scale(0)';
-                dynamicIsland.querySelector('.island-icon-default').style.opacity = '0';
-            } else {
-                // Restore default styles
-                dynamicIsland.style.width = '120px';
-                dynamicIsland.style.height = '38px';
-                dynamicIsland.style.borderRadius = '50px';
-                dynamicIsland.querySelector('.island-expanded-content').style.opacity = '0';
-                dynamicIsland.querySelector('.island-expanded-content').style.transform = 'translateY(10px)';
-                dynamicIsland.querySelector('.island-icon-default').style.transform = 'scale(1)';
-                dynamicIsland.querySelector('.island-icon-default').style.opacity = '1';
-                
-                // Resume pulse animation
-                startIslandPulse();
-            }
-        });
 
         toggleChatPopupButton.addEventListener('click', () => {
             chatPopupOverlay.classList.remove('hidden');
@@ -626,6 +686,43 @@
         onWindowResize();
         animate();
 
+        // Wait for components.js to load before setting up event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close sidebar when clicking outside
+            document.addEventListener('click', function(e) {
+                const leftSidebar = document.getElementById('leftSidebar');
+                const rightSidebar = document.getElementById('rightSidebar');
+                const dynamicIsland = document.querySelector('.dynamic-island');
+                
+                // Check if click is outside sidebars and not on the dynamic island
+                if (!leftSidebar.contains(e.target) && !rightSidebar.contains(e.target) && !dynamicIsland.contains(e.target)) {
+                    // Close any open sidebars - use window.activeSidebars since it's defined in components.js
+                    if (window.activeSidebars && window.activeSidebars.left) window.closeSidebar('left');
+                    if (window.activeSidebars && window.activeSidebars.right) window.closeSidebar('right');
+                }
+            });
+
+            // Handle keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Escape key closes all sidebars
+                if (e.key === 'Escape') {
+                    if (window.activeSidebars && window.activeSidebars.left) window.closeSidebar('left');
+                    if (window.activeSidebars && window.activeSidebars.right) window.closeSidebar('right');
+                }
+                
+                // Alt + P opens Pomodoro
+                if (e.altKey && e.key === 'p') {
+                    e.preventDefault();
+                    window.toggleSidebar('left');
+                }
+                
+                // Alt + T opens Tasks
+                if (e.altKey && e.key === 't') {
+                    e.preventDefault();
+                    window.toggleSidebar('right');
+                }
+            });
+        });
     </script>
 </body>
 </html>
