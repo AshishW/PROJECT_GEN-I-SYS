@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Themed To-Do List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0a0f;
+            color: #c8f5ff;
+            /* Allow scrolling for the heatmap */
+            overflow: auto; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Place it behind all content */
+        }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.5);
+        }
+        .hud-panel {
+            background-color: rgba(10, 20, 25, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+        }
+        .control-button {
+            background-color: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+        .control-button:hover, .control-button.active {
+            background-color: rgba(0, 255, 255, 0.25);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+        #task-input {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            color: #c8f5ff;
+        }
+        #task-input::placeholder {
+            color: rgba(200, 245, 255, 0.5);
+        }
+        .task-item {
+            background-color: rgba(0, 255, 255, 0.05);
+            border-left: 3px solid rgba(0, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .task-item.completed {
+            background-color: rgba(0, 255, 255, 0.15);
+            border-left-color: #00ff00;
+        }
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: rgba(200, 245, 255, 0.5);
+        }
+        .task-button {
+            transition: transform 0.2s ease;
+        }
+        .task-button:hover { transform: scale(1.1); }
+        .icon-complete:hover { color: #00ff00; }
+        .icon-reactivate:hover { color: #ffae42; } /* Orange for reactivate */
+        .icon-delete:hover { color: #ff4d4d; }
+
+        /* Heatmap Styling */
+        #heatmap-grid {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            grid-auto-flow: column;
+            gap: 4px;
+        }
+        .heatmap-cell {
+            width: 15px;
+            height: 15px;
+            background-color: rgba(0, 255, 255, 0.1);
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+        .heatmap-cell:hover {
+            border: 1px solid #00ffff;
+        }
+        #heatmap-labels {
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px 5px 20px; /* Align with grid */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div class="relative z-10 flex flex-col items-center justify-start min-h-screen p-4 pt-8">
+        <main id="todo-app" class="hud-panel p-4 sm:p-6 w-full max-w-2xl">
+            <h1 class="text-2xl sm:text-3xl text-center font-bold text-glow mb-4">DATA-DRIVEN TASKS</h1>
+            <form id="add-task-form" class="flex gap-2 mb-4">
+                <input type="text" id="task-input" class="flex-grow p-2" placeholder="Synchronize new task..." required>
+                <button type="submit" class="control-button px-4 py-2 rounded-lg font-bold">ADD</button>
+            </form>
+            <div id="filter-buttons" class="flex justify-center gap-2 mb-4">
+                <button data-filter="all" class="control-button px-3 py-1 rounded-md text-sm active">All</button>
+                <button data-filter="active" class="control-button px-3 py-1 rounded-md text-sm">Active</button>
+                <button data-filter="completed" class="control-button px-3 py-1 rounded-md text-sm">Completed</button>
+            </div>
+            <ul id="task-list" class="space-y-2 h-48 sm:h-56 overflow-y-auto pr-2"></ul>
+        </main>
+        
+        <!-- Heatmap Section -->
+        <section id="heatmap-section" class="hud-panel p-4 sm:p-6 w-full max-w-2xl mt-6">
+             <h2 class="text-lg text-center font-bold text-glow mb-4">ACTIVITY MATRIX</h2>
+             <div id="heatmap-labels" class="text-xs text-cyan-300 opacity-70"></div>
+             <div id="heatmap-grid"></div>
+        </section>
+    </div>
+
+    <script type="module">
+        // --- 3D Scene Setup ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1, 6);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0x00ffff, 1.5, 100);
+        pointLight.position.set(-5, 5, 5);
+        scene.add(pointLight);
+
+        // --- 3D Crystal Object ---
+        const crystalGroup = new THREE.Group();
+        const crystalGeom = new THREE.IcosahedronGeometry(2, 0);
+        const crystalMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.7, emissive: 0x00ffff, emissiveIntensity: 0.3 });
+        const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+        const wireframeGeom = new THREE.IcosahedronGeometry(2.05, 0);
+        const wireframeMat = new THREE.MeshBasicMaterial({ color: 0x88ffff, wireframe: true, transparent: true, opacity: 0.3 });
+        const wireframe = new THREE.Mesh(wireframeGeom, wireframeMat);
+        crystalGroup.add(crystal, wireframe);
+        scene.add(crystalGroup);
+        
+        // --- DOM Elements ---
+        const taskListEl = document.getElementById('task-list');
+        const addTaskForm = document.getElementById('add-task-form');
+        const taskInput = document.getElementById('task-input');
+        const filterButtons = document.getElementById('filter-buttons');
+        const heatmapGrid = document.getElementById('heatmap-grid');
+        const heatmapLabels = document.getElementById('heatmap-labels');
+
+        // --- App State & LocalStorage ---
+        let tasks = JSON.parse(localStorage.getItem('todo-tasks-3d')) || [];
+        let heatmapData = JSON.parse(localStorage.getItem('todo-heatmap-3d')) || {};
+        let currentFilter = 'all';
+
+        function saveState() {
+            localStorage.setItem('todo-tasks-3d', JSON.stringify(tasks));
+            localStorage.setItem('todo-heatmap-3d', JSON.stringify(heatmapData));
+        }
+
+        // --- Core App Logic ---
+        function pulseCrystal() {
+            let scale = 1;
+            const pulseInterval = setInterval(() => {
+                scale += 0.08;
+                crystalGroup.scale.set(scale, scale, scale);
+                if (scale >= 1.2) {
+                    clearInterval(pulseInterval);
+                    const shrinkInterval = setInterval(() => {
+                         scale -= 0.01;
+                         crystalGroup.scale.set(scale, scale, scale);
+                         if(scale <= 1) {
+                            crystalGroup.scale.set(1,1,1);
+                            clearInterval(shrinkInterval);
+                         }
+                    }, 20);
+                }
+            }, 20);
+        }
+
+        function renderTasks() {
+            taskListEl.innerHTML = '';
+            const filteredTasks = tasks.filter(task => {
+                if (currentFilter === 'active') return !task.completed;
+                if (currentFilter === 'completed') return task.completed;
+                return true;
+            });
+
+            if(filteredTasks.length === 0) {
+                 taskListEl.innerHTML = `<li class="text-center text-cyan-400 opacity-60 p-4">No tasks in this category.</li>`;
+            }
+
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.id = `task-${task.id}`;
+                taskItem.className = 'task-item flex items-center justify-between p-2 rounded-md';
+                if(task.completed) taskItem.classList.add('completed');
+                
+                const completeButton = `
+                    <button data-action="complete" class="task-button icon-complete" title="Complete Task">
+                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </button>`;
+                const reactivateButton = `
+                    <button data-action="reactivate" class="task-button icon-reactivate" title="Re-activate Task">
+                         <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </button>`;
+
+                taskItem.innerHTML = `
+                    <span class="flex-grow mr-2">${task.text}</span>
+                    <div class="flex items-center gap-3">
+                        ${task.completed ? reactivateButton : completeButton}
+                        <button data-action="delete" class="task-button icon-delete" title="Delete Task">
+                            <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                `;
+                taskListEl.prepend(taskItem);
+            });
+        }
+        
+        function renderHeatmap() {
+            heatmapGrid.innerHTML = '';
+            heatmapLabels.innerHTML = '';
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 15 * 7); // ~15 weeks
+            
+            let currentMonth = -1;
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                // Add month labels
+                if (d.getMonth() !== currentMonth) {
+                    currentMonth = d.getMonth();
+                    const monthName = d.toLocaleString('default', { month: 'short' });
+                    heatmapLabels.innerHTML += `<span class="flex-1 text-center">${monthName}</span>`;
+                }
+                
+                const cell = document.createElement('div');
+                const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
+                const count = heatmapData[dateString] || 0;
+                
+                let opacity = 0.1;
+                if(count > 0) opacity = 0.3;
+                if(count > 2) opacity = 0.6;
+                if(count > 5) opacity = 0.8;
+                if(count > 8) opacity = 1.0;
+                
+                cell.className = 'heatmap-cell';
+                cell.style.backgroundColor = `rgba(0, 255, 255, ${opacity})`;
+                cell.title = `${count} tasks on ${dateString}`;
+                heatmapGrid.appendChild(cell);
+            }
+        }
+        
+        // --- Event Handlers ---
+        addTaskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                tasks.push({
+                    id: Date.now(),
+                    text: taskText,
+                    completed: false,
+                });
+                taskInput.value = '';
+                saveState();
+                renderTasks();
+                pulseCrystal();
+            }
+        });
+
+        taskListEl.addEventListener('click', (e) => {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+            
+            const taskItem = e.target.closest('li');
+            const taskId = parseInt(taskItem.id.replace('task-', ''));
+            const action = button.dataset.action;
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+            if (taskIndex === -1) return;
+
+            if (action === 'delete') {
+                tasks.splice(taskIndex, 1);
+            } else if (action === 'complete') {
+                tasks[taskIndex].completed = true;
+                const today = new Date().toISOString().split('T')[0];
+                heatmapData[today] = (heatmapData[today] || 0) + 1;
+            } else if (action === 'reactivate') {
+                 tasks[taskIndex].completed = false;
+            }
+            
+            saveState();
+            renderTasks();
+            renderHeatmap(); // Re-render heatmap in case a task was completed
+            pulseCrystal();
+        });
+        
+        filterButtons.addEventListener('click', (e) => {
+             const button = e.target.closest('button[data-filter]');
+             if(!button) return;
+             
+             filterButtons.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+             button.classList.add('active');
+             
+             currentFilter = button.dataset.filter;
+             renderTasks();
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            crystalGroup.rotation.x += 0.001;
+            crystalGroup.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+
+        // --- Initialisation ---
+        renderTasks();
+        renderHeatmap();
+        animate();
+    </script>
+</body>
+</html>

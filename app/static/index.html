@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive AI Voice Assistant</title>
+    <script src="/static/js/app.js" type="module"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet"> -->
+    <style>
+        body {
+            font-family:monospace, 'Courier New', Courier;
+            background-color: #0a0a0f;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            
+            /* Making text non-selectable */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.5);
+        }
+        .listening-glow {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 1), 0 0 60px rgba(0, 255, 255, 0.7);
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        /* Sci-Fi HUD Border */
+        .corner-border {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            z-index: 20;
+            pointer-events: none;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
+        }
+        .corner-border.top-left { top: 1.5rem; left: 1.5rem; border-right: none; border-bottom: none; }
+        .corner-border.top-right { top: 1.5rem; right: 1.5rem; border-left: none; border-bottom: none; }
+        .corner-border.bottom-left { bottom: 1.5rem; left: 1.5rem; border-right: none; border-top: none; }
+        .corner-border.bottom-right { bottom: 1.5rem; right: 1.5rem; border-left: none; border-top: none; }
+        
+        /* Glass panel effect for header */
+        .header-panel {
+            background-color: rgba(10, 20, 25, 0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        /* Custom scrollbar for chat messages - Tailwind might need a plugin for this, or use plain CSS */
+        #messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #messages::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        #messages::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 255, 255, 0.5);
+        }
+
+
+        @media (min-width: 640px) {
+            .corner-border {
+                width: 40px;
+                height: 40px;
+            }
+             .corner-border.top-left { top: 2rem; left: 2rem; }
+             .corner-border.top-right { top: 2rem; right: 2rem; }
+             .corner-border.bottom-left { bottom: 2rem; left: 2rem; }
+             .corner-border.bottom-right { bottom: 2rem; right: 2rem; }
+        }
+
+        /* Message styling */
+        .message {
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.1);
+        }
+        
+        .message.user {
+            background: rgba(0, 255, 255, 0.1);
+            margin-left: 2rem;
+        }
+        
+        .message.bot {
+            background: rgba(10, 20, 25, 0.2);
+            margin-right: 2rem;
+            height: fit-content;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- Sci-fi borders -->
+    <div class="corner-border top-left"></div>
+    <div class="corner-border top-right"></div>
+    <div class="corner-border bottom-left"></div>
+    <div class="corner-border bottom-right"></div>
+
+    <!-- Container for the three.js canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Main UI Content -->
+    <div class="relative z-10 flex flex-col min-h-screen p-6 sm:p-8">
+        
+        <!-- Header Text with new glass panel -->
+        <header class="w-full flex justify-center">
+            <div class="header-panel flex flex-col items-center justify-center space-x-4">
+                <!-- <h1 id="title" class="text-4xl sm:text-5xl font-bold text-glow transition-opacity duration-500">GEN-I-SYS</h1> -->
+                <img src="/static/assets/images/GEN-I-SYS_logo.png" alt="GEN-I-SYS Logo" class="h-12 sm:h-16">
+                <p id="status" class="text-base sm:text-lg text-cyan-200 transition-all duration-300 h-8 mt-3">General Intelligence System</p>
+            </div>
+        </header>
+
+        <!-- Spacer to push button to the bottom -->
+        <div class="flex-grow"></div>
+
+        <!-- Footer with Mic Button -->
+        <footer class="w-full flex justify-center items-center pb-4 gap-4">
+             <button id="startAudioButton" class="bg-cyan-400/20 backdrop-blur-md border border-cyan-400/50 rounded-full p-4 sm:p-6 transition-all duration-300 ease-in-out focus:outline-none glow-effect">
+                <svg id="mic-icon" class="w-7 h-7 sm:w-8 sm:h-8 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+            </button>
+            <button id="toggleChatPopupButton" class="bg-cyan-400/20 backdrop-blur-md border border-cyan-400/50 rounded-full p-4 sm:p-6 transition-all duration-300 ease-in-out focus:outline-none">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </button>
+        </footer>
+    </div>
+
+    <!-- Chat Popup (hidden by default) -->
+    <div id="chatPopupOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center hidden transition-opacity duration-300 ease-in-out">
+        <div id="chatPopup" class="w-11/12 max-w-md md:max-w-lg h-[70vh] max-h-[600px] bg-slate-900/70 backdrop-blur-xl border border-cyan-400/40 rounded-2xl shadow-2xl shadow-cyan-500/30 flex flex-col overflow-hidden">
+            <!-- Chat Header -->
+            <div class="flex justify-between items-center p-4 border-b border-cyan-400/30">
+                <h2 class="text-xl font-bold text-cyan-200 text-glow">Chat</h2>
+                <button id="closeChatPopupButton" class="text-cyan-300 hover:text-cyan-100 transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <!-- Messages Area -->
+            <div id="messages" class="flex-grow p-4 overflow-y-auto space-y-3 text-sm text-cyan-100/90">
+                <!-- Messages will be appended here dynamically -->
+            </div>
+            <!-- Message Input Form -->
+            <form id="messageForm" class="p-4 border-t border-cyan-400/30">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="message" name="message" placeholder="Type your message..."
+                           class="flex-grow bg-cyan-900/40 backdrop-blur-sm text-cyan-100 border border-cyan-400/60 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-cyan-400/80 placeholder-cyan-300/70 text-sm">
+                    <button type="submit" id="sendButton" disabled
+                            class="bg-cyan-500/40 hover:bg-cyan-500/60 backdrop-blur-md border border-cyan-400/70 rounded-lg p-3 transition-all duration-300 text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/80 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Compatibility Check ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const isSupported = SpeechRecognition && AudioContext;
+
+        // --- Basic Setup ---
+        const canvasContainer = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        canvasContainer.appendChild(renderer.domElement);
+
+        // --- State ---
+        let isListening = false;
+        let audioContext, analyser, dataArray, source;
+        let recognition;
+        let mouseX = 0, mouseY = 0;
+        let averageVolume = 0;
+        
+        // --- UI Elements ---
+        const micButton = document.getElementById('startAudioButton');
+        const statusText = document.getElementById('status');
+        const chatPopupOverlay = document.getElementById('chatPopupOverlay');
+        const toggleChatPopupButton = document.getElementById('toggleChatPopupButton');
+        const closeChatPopupButton = document.getElementById('closeChatPopupButton');
+
+
+        if (!isSupported) {
+            statusText.textContent = "Voice AI not supported here.";
+            micButton.disabled = true;
+            micButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // --- Particle Sphere ---
+        const particleCount = 7000;
+        const positions = new Float32Array(particleCount * 3);
+        const originalPositions = new Float32Array(particleCount * 3);
+        
+        const radius = 1.5;
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            const phi = Math.acos(-1 + (2 * i) / particleCount);
+            const theta = Math.sqrt(particleCount * Math.PI) * phi;
+            positions[i3] = radius * Math.cos(theta) * Math.sin(phi);
+            positions[i3 + 1] = radius * Math.sin(theta) * Math.sin(phi);
+            positions[i3 + 2] = radius * Math.cos(phi);
+            originalPositions[i3] = positions[i3];
+            originalPositions[i3 + 1] = positions[i3 + 1];
+            originalPositions[i3 + 2] = positions[i3 + 2];
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('originalPosition', new THREE.BufferAttribute(originalPositions, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.015,
+            color: new THREE.Color(0x00ffff),
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+        });
+
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+
+        // --- Core Functions ---
+        async function setupAudioContext() {
+            if (audioContext && audioContext.state !== 'closed') return;
+            try {
+                audioContext = new AudioContext();
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            } catch (err) {
+                console.error("Error setting up audio context:", err);
+                statusText.textContent = "Microphone access denied.";
+                isListening = false;
+                updateUIState();
+            }
+        }
+
+        function setupSpeechRecognition() {
+            if (recognition) return;
+            recognition = new SpeechRecognition();
+            recognition.interimResults = true;
+            recognition.continuous = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+                statusText.textContent = interimTranscript || '...';
+            };
+            
+            recognition.onend = () => {
+                if (isListening) recognition.start();
+            };
+            
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                if (event.error === 'no-speech') statusText.textContent = 'Did not hear anything...';
+            };
+        }
+
+        async function toggleListening() {
+            isListening = !isListening;
+            if (isListening) {
+                await setupAudioContext();
+                if (!audioContext) return;
+                setupSpeechRecognition();
+                recognition.start();
+                statusText.textContent = "Say something...";
+            } else {
+                if (recognition) recognition.stop();
+                if (audioContext && audioContext.state !== 'closed') {
+                    audioContext.close().then(() => audioContext = null);
+                }
+                statusText.textContent = "Click the orb to activate";
+            }
+            updateUIState();
+        }
+        
+        function updateUIState() {
+            micButton.classList.toggle('listening-glow', isListening);
+            micButton.classList.toggle('glow-effect', !isListening);
+            statusText.classList.toggle('text-glow', isListening);
+        }
+
+        // --- Event Listeners ---
+        if (isSupported) micButton.addEventListener('click', toggleListening);
+        window.addEventListener('resize', onWindowResize, false);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('touchmove', (e) => {
+             if (e.touches.length > 0) onMouseMove(e.touches[0]);
+        });
+
+        toggleChatPopupButton.addEventListener('click', () => {
+            chatPopupOverlay.classList.remove('hidden');
+            chatPopupOverlay.classList.remove('opacity-0'); // For smooth transition if using opacity
+        });
+
+        closeChatPopupButton.addEventListener('click', () => {
+            chatPopupOverlay.classList.add('hidden');
+            chatPopupOverlay.classList.add('opacity-0'); // For smooth transition
+        });
+
+        // Optional: Close popup if user clicks on the overlay (outside the popup content)
+        chatPopupOverlay.addEventListener('click', (event) => {
+            if (event.target === chatPopupOverlay) {
+                chatPopupOverlay.classList.add('hidden');
+                chatPopupOverlay.classList.add('opacity-0');
+            }
+        });
+
+        function onWindowResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function onMouseMove(event) {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+            
+            if (isListening && analyser) {
+                analyser.getByteFrequencyData(dataArray);
+                let sum = dataArray.reduce((a, b) => a + b, 0);
+                averageVolume = sum / dataArray.length;
+            } else {
+                averageVolume *= 0.96;
+            }
+            
+            const positions = geometry.attributes.position.array;
+            const origPos = geometry.attributes.originalPosition.array;
+            const turbulence = Math.min(averageVolume / 100, 1.0) * 2.5;
+
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                const p = new THREE.Vector3(origPos[i3], origPos[i3+1], origPos[i3+2]);
+                const distortion = Math.sin(p.y * 2 + elapsedTime * 1.5) * Math.cos(p.x * 2 + elapsedTime * 1.5) * turbulence;
+                const direction = p.clone().normalize();
+                const displacement = direction.multiplyScalar(distortion);
+                const targetPos = p.clone().add(displacement);
+                
+                positions[i3] += (targetPos.x - positions[i3]) * 0.1;
+                positions[i3+1] += (targetPos.y - positions[i3+1]) * 0.1;
+                positions[i3+2] += (targetPos.z - positions[i3+2]) * 0.1;
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            
+            particles.rotation.y += 0.0005;
+            
+            camera.position.x += (mouseX * 2 - camera.position.x) * 0.02;
+            camera.position.y += (-mouseY * 2 - camera.position.y) * 0.02;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+        
+        onWindowResize();
+        animate();
+
+    </script>
+</body>
+</html>
