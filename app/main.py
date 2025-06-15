@@ -1,5 +1,11 @@
+import sys
+
+# if sys.platform == "win32":
+#     import asyncio
+#     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import os
+import asyncio
 import json
 import base64
 import warnings
