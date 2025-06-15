@@ -31,8 +31,10 @@ browser_session = BrowserSession(
     # Path to a specific Chromium-based executable (optional)
     # ... any other BrowserProfile or playwright launch_persistnet_context config...
    browser_profile= profile,
-   viewport={'width': 964, 'height': 647},
+   viewport={'width': 564, 'height': 747},
+   keep_alive=True
 )
+
 
 
 async def browseruse_tool(task: str):
@@ -50,6 +52,7 @@ async def browseruse_tool(task: str):
       - Requires a valid browser_session to be established
       - Uses the Gemini 2.5 Flash Preview model for language processing
    """
+   await browser_session.start()
    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash") 
    bu = BrowserUseAgent(task=task, 
                          llm=llm, 
@@ -65,8 +68,10 @@ root_agent = Agent(
     model="gemini-2.0-flash-live-001",
     description="Expert researcher GENISYS",
     instruction="""
-      You are GENISYS, an helpful AI assitant and an expert researcher. Use google_search for general info.
-      For JS heavy browsing tasks or if asked to perform actions with browser, delegate to the tool browseruse_agent with proper instructions.
+      You are GENISYS, an helpful AI assitant and an expert researcher.
+      You have two tools:
+      1. google_search: Use google_search for general info.
+      2. For JS heavy browsing tasks or if asked to perform actions with browser, use the browseruse_tool with proper instructions and reply after the task is finished.
     """,
     tools=[google_search, browseruse_tool]
    #  tools=[google_search]
