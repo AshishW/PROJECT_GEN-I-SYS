@@ -174,40 +174,39 @@ let micStream;
 let audioBuffer = [];
 let bufferTimer = null;
 
+// Track audio state for toggle
+let isMicActive = false;
+
 // Import the audio worklets
 import { startAudioPlayerWorklet } from "./audio-player.js";
-import { startAudioRecorderWorklet } from "./audio-recorder.js";
+import { startAudioRecorderWorklet, stopMicrophone } from "./audio-recorder.js";
 
 // Start audio
-function startAudio() {
+async function startAudio() {
   // Start audio output
-  startAudioPlayerWorklet().then(([node, ctx]) => {
-    audioPlayerNode = node;
-    audioPlayerContext = ctx;
-  });
+  [audioPlayerNode, audioPlayerContext] = await startAudioPlayerWorklet();
   // Start audio input
-  startAudioRecorderWorklet(audioRecorderHandler).then(
-    ([node, ctx, stream]) => {
-      audioRecorderNode = node;
-      audioRecorderContext = ctx;
-      micStream = stream;
-    }
-  );
+  [audioRecorderNode, audioRecorderContext, micStream] = await startAudioRecorderWorklet(audioRecorderHandler);
 }
 
-// Start the audio only when the user clicked the button
-// (due to the gesture requirement for the Web Audio API)
-const startAudioButton = document.getElementById("startAudioButton");
-startAudioButton.addEventListener("click", () => {
-  // Play mic click sound
-  playSound('micClick');
-  
-  startAudioButton.disabled = true;
-  startAudio();
-  is_audio = true;
-  eventSource.close(); // close current connection
-  connectSSE(); // reconnect with the audio mode
-});
+// Stop audio and cleanup
+function stopAudio() {
+  stopAudioRecording();
+  if (micStream) {
+    stopMicrophone(micStream);
+    micStream = null;
+  }
+  if (audioRecorderContext && audioRecorderContext.state !== "closed") {
+    audioRecorderContext.close();
+    audioRecorderContext = null;
+  }
+  if (audioPlayerContext && audioPlayerContext.state !== "closed") {
+    audioPlayerContext.close();
+    audioPlayerContext = null;
+  }
+  audioRecorderNode = null;
+  audioPlayerNode = null;
+}
 
 // Audio recorder handler
 function audioRecorderHandler(pcmData) {
@@ -274,3 +273,36 @@ function arrayBufferToBase64(buffer) {
   }
   return window.btoa(binary);
 }
+
+// Start the audio only when the user clicked the button
+// (due to the gesture requirement for the Web Audio API)
+const startAudioButton = document.getElementById("startAudioButton");
+startAudioButton.addEventListener("click", async () => {
+  // Toggle mic state
+  if (!isMicActive) {
+    // Play mic click sound
+    playSound('micClick');
+    startAudioButton.disabled = true;
+    isMicActive = true;
+    is_audio = true;
+    await startAudio();
+    if (eventSource) {
+      eventSource.close();
+    }
+    connectSSE();
+    startAudioButton.disabled = false;
+    startAudioButton.classList.add('listening-glow');
+  } else {
+    // Stop/cleanup everything
+    isMicActive = false;
+    is_audio = false;
+    startAudioButton.disabled = true;
+    stopAudio();
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    startAudioButton.disabled = false;
+    startAudioButton.classList.remove('listening-glow');
+  }
+});
