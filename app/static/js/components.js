@@ -152,108 +152,36 @@ function addComponentStyles(componentName, styles) {
     if (existingStyle) {
         existingStyle.remove();
     }
-    
-    // Enhanced styles with responsive design
-    const responsiveStyles = `
-        ${styles}
-        
-        /* Mobile Responsive Styles */
-        @media (max-width: ${BREAKPOINTS.mobile}px) {
-            .${componentName}-container {
-                min-height: 100vh;
-                min-height: 100dvh; /* Dynamic viewport height for mobile */
+
+    // Always append to <head> after DOM is ready and after HTML is injected
+    function inject() {
+        const styleElement = document.createElement('style');
+        styleElement.id = `${componentName}-styles`;
+        styleElement.textContent = styles + `
+            /* Ensure .control-button styles always apply */
+            .control-button, .control-button.active, .control-button:active, .control-button:hover {
+                background-color: rgba(0, 255, 255, 0.1);
+                border: 1px solid rgba(0, 255, 255, 0.3);
+                color: #c8f5ff;
+                transition: all 0.2s ease-in-out;
             }
-            
-            .${componentName}-ui {
-                padding: 0.75rem;
-                min-height: 100vh;
-                min-height: 100dvh;
-            }
-            
-            .${componentName}-canvas {
-                opacity: 0.3; /* Reduce canvas visibility on mobile for better UI readability */
-            }
-            
-            .hud-panel, .timer-panel {
-                padding: 1rem;
-                margin-bottom: 0.75rem;
-                font-size: 0.9rem;
-            }
-            
-            .control-button {
-                padding: 0.75rem 1.5rem;
-                font-size: 0.9rem;
-                min-height: 48px; /* Touch-friendly button size */
-            }
-            
-            .task-input {
-                padding: 0.75rem;
-                font-size: 16px; /* Prevent zoom on iOS */
-            }
-            
-            .task-item {
-                padding: 0.75rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .task-button {
-                min-width: 44px;
-                min-height: 44px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            /* Heatmap adjustments for mobile */
-            #heatmap-grid {
-                gap: 1px;
-            }
-            
-            .heatmap-cell {
-                width: 8px;
-                height: 8px;
-            }
-            
-            #heatmap-labels {
-                font-size: 0.7rem;
-                padding: 0 5px 3px 10px;
-            }
-        }
-        
-        /* Tablet Responsive Styles */
-        @media (min-width: ${BREAKPOINTS.mobile + 1}px) and (max-width: ${BREAKPOINTS.tablet}px) {
-            .${componentName}-ui {
-                padding: 1rem;
-            }
-            
-            .control-button {
-                min-height: 44px;
-            }
-            
-            .task-button {
-                min-width: 40px;
-                min-height: 40px;
-            }
-        }
-        
-        /* Touch-specific styles */
-        @media (hover: none) and (pointer: coarse) {
-            .control-button:hover, .task-button:hover {
-                transform: none; /* Disable hover animations on touch devices */
-            }
-            
-            .control-button:active, .task-button:active {
-                transform: scale(0.95);
+            .control-button.active, .control-button:active {
                 background-color: rgba(0, 255, 255, 0.3);
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
             }
-        }
-    `;
-    
-    // Add new styles
-    const styleElement = document.createElement('style');
-    styleElement.id = `${componentName}-styles`;
-    styleElement.textContent = responsiveStyles;
-    document.head.appendChild(styleElement);
+            .control-button:hover {
+                background-color: rgba(0, 255, 255, 0.25);
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            }
+        `;
+        document.head.appendChild(styleElement);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", inject);
+    } else {
+        inject();
+    }
 }
 
 // Enhanced Pomodoro component with mobile considerations
@@ -1055,6 +983,8 @@ function initializeTasklistWith3D() {
     taskListEl.addEventListener('click', (e) => {
         const button = e.target.closest('button[data-action]');
         if (!button) return;
+        // Only stop propagation for task action buttons, not for all clicks
+        e.stopPropagation();
         
         const taskItem = e.target.closest('li');
         const taskId = parseInt(taskItem.id.replace('task-', ''));
