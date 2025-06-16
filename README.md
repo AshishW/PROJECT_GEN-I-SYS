@@ -103,6 +103,12 @@ Follow these steps to get the project running locally.
 4.  **Configure Environment Variables:**
     Create a `.env` file in the `app/` directory by copying the example if one is provided. Fill in any necessary API keys or configuration settings.
 
+    .env:
+    ```sh
+    GOOGLE_GENAI_USE_VERTEXAI=FALSE
+    GOOGLE_API_KEY= <ADD_YOUR_GEMINI_API_KEY> 
+    ```
+
 5.  **Run the application:(after cd app)**
     ```sh
     uvicorn main:app --reload
