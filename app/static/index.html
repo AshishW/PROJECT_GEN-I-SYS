@@ -671,7 +671,7 @@
             
             const positions = geometry.attributes.position.array;
             const origPos = geometry.attributes.originalPosition.array;
-            const turbulence = Math.min(averageVolume / 100, 1.0) * 2.5;
+            const turbulence = Math.min(averageVolume / 100, 1.0) * 1.5;
 
             for (let i = 0; i < particleCount; i++) {
                 const i3 = i * 3;

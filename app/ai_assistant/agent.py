@@ -3,7 +3,14 @@ from google.adk.tools import google_search
 from browser_use import Agent as BrowserUseAgent
 from browser_use import BrowserSession, BrowserProfile
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
+from pydantic import SecretStr
+from dotenv import load_dotenv
+import os
+import asyncio
 
+load_dotenv()
+# api_key = os.getenv('GOOGLE_API_KEY_2')
 
 profile = BrowserProfile(
     headless=False,  # if you want to see the browser
@@ -32,10 +39,18 @@ browser_session = BrowserSession(
     # ... any other BrowserProfile or playwright launch_persistnet_context config...
    browser_profile= profile,
    viewport={'width': 564, 'height': 747},
-   keep_alive=True
+   # keep_alive=True #to keep browser running.(needs use of browser_session())
 )
 
+_browser_session_started = False
+_browser_session_lock = asyncio.Lock()
 
+async def ensure_browser_session_started():
+    global _browser_session_started
+    async with _browser_session_lock:
+        if not _browser_session_started:
+            await browser_session.start()
+            _browser_session_started = True
 
 async def browseruse_tool(task: str):
    """
@@ -50,10 +65,11 @@ async def browseruse_tool(task: str):
       result = await browseruse_tool("Search for Python tutorials on Google")
    Note:
       - Requires a valid browser_session to be established
-      - Uses the Gemini 2.5 Flash Preview model for language processing
+      - Uses the a large language model for language processing
    """
-   await browser_session.start()
-   llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash") 
+   # await ensure_browser_session_started()
+   llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-04-17") 
+   # llm=ChatOllama(model="qwen2.5:0.5b", num_ctx=32000)
    bu = BrowserUseAgent(task=task, 
                          llm=llm, 
                          browser_session=browser_session,
@@ -71,7 +87,7 @@ root_agent = Agent(
       You are GENISYS, an helpful AI assistant and an expert researcher.
       You have two tools:
       1. google_search: Use google_search for general info and queries.
-      2. browseruse_tool: For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
+      2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
     """,
     tools=[google_search, browseruse_tool]
    #  tools=[google_search]
