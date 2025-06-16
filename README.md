@@ -85,8 +85,8 @@ Follow these steps to get the project running locally.
 
 1.  **Clone the repository:**
     ```sh
-    git clone <your-repository-url>
-    cd GENISYS
+    git clone https://github.com/AshishW/PROJECT_GEN-I-SYS.git
+    cd <repo-name>
     ```
 
 2.  **Set up a Python virtual environment:**
