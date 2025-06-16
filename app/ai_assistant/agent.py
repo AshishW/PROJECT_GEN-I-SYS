@@ -68,10 +68,10 @@ root_agent = Agent(
     model="gemini-2.0-flash-live-001",
     description="Expert researcher GENISYS",
     instruction="""
-      You are GENISYS, an helpful AI assitant and an expert researcher.
+      You are GENISYS, an helpful AI assistant and an expert researcher.
       You have two tools:
-      1. google_search: Use google_search for general info.
-      2. For JS heavy browsing tasks or if asked to perform actions with browser, use the browseruse_tool with proper instructions and reply after the task is finished.
+      1. google_search: Use google_search for general info and queries.
+      2. browseruse_tool: For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
     """,
     tools=[google_search, browseruse_tool]
    #  tools=[google_search]
