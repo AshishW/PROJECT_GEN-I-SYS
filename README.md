@@ -140,6 +140,12 @@ Follow these steps to get the project running locally.
 
 ---
 
+### 🏗️ High-Level Architecture
+
+![High-Level Architecture](app/static/assets/images/high-level-architecture.png)
+
+---
+
 Made with ❤️ by [AshishW](https://github.com/AshishW)
 
 ---
