@@ -1,8 +1,9 @@
 const soundEffects = {
-    dynamicIsland: new Audio('/static/assets/sounds/mixkit-modern-technology-select-3124.wav'),
+    dynamicIsland: new Audio('/static/assets/sounds/mixkit-sci-fi-click.wav'),
     taskComplete: new Audio('/static/assets/sounds/mixkit-tech-click-1140.wav'),
     micClick: new Audio('/static/assets/sounds/mixkit-high-tech-bleep-2521.wav'),
-    uiInteract: new Audio('/static/assets/sounds/mixkit-cool-interface-click-tone-2568.wav')
+    uiInteract: new Audio('/static/assets/sounds/mixkit-cool-interface-click-tone-2568.wav'),
+    browserAgentActivated: new Audio('/static/assets/sounds/mixkit-sci-fi-interface_for-browser-agent.wav')
 };
 
 // Preload all sounds
