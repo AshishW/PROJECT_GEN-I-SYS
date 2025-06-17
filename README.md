@@ -13,7 +13,7 @@
 **Main Interface**
 
 
-GEN-I-SYS is a sophisticated, voice-activated AI assistant featuring a futuristic, heads-up display (HUD) style interface. It's designed to be an interactive and productive companion, integrating powerful tools like a Pomodoro timer and a task manager directly into the experience. The application leverages real-time audio processing and streaming, combined with stunning 3D visualizations, to create a truly immersive user experience.
+**GEN-I-SYS** (pronounced: GENISYS) is a sophisticated, voice-activated AI assistant featuring a futuristic, heads-up display (HUD) style interface. It's designed to be an interactive and productive companion, integrating powerful tools like a Pomodoro timer and a task manager directly into the experience. The application leverages real-time audio processing and streaming, combined with stunning 3D visualizations, to create a truly immersive user experience.
 
 ---
 
@@ -37,7 +37,7 @@ The project is built with a modern client-server architecture:
 *   **Frontend**: The user interface is built with vanilla **JavaScript**, **HTML5**, and styled with **Tailwind CSS**. **Three.js** is used for all 3D rendering. The frontend communicates with the backend via:
     *   `HTTP POST` requests to send user input (text or audio).
     *   `Server-Sent Events (SSE)` to receive a continuous stream of data (text and PCM audio) from the AI agent.
-*   **Backend**: A **Python** server (likely using a framework like Flask or FastAPI) orchestrates the application.
+*   **Backend**: A **Python** FastAPI server orchestrates the application.
     *   It serves the static frontend files.
     *   It provides API endpoints (`/send`, `/events`) to handle communication.
     *   The `ai_assistant` module processes user input and generates AI responses.

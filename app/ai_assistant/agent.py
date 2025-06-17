@@ -10,7 +10,7 @@ import os
 import asyncio
 
 load_dotenv()
-# api_key = os.getenv('GOOGLE_API_KEY_2')
+
 
 profile = BrowserProfile(
     headless=False,  # if you want to see the browser
