@@ -140,6 +140,9 @@ Follow these steps to get the project running locally.
 
 ---
 
+Made with ❤️ by [AshishW](https://github.com/AshishW)
+
+---
 
 
 
