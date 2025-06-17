@@ -44,6 +44,7 @@ The project is built with a modern client-server architecture:
     *   It serves the static frontend files.
     *   It provides API endpoints (`/send`, `/events`) to handle communication.
     *   The `ai_assistant` module processes user input and generates AI responses.
+    *   Leverages Google ADK and BrowserUse for Agent workflows. 
 
 ---
 
