@@ -188,6 +188,7 @@
             margin-right: 2rem;
             height: fit-content;
         }
+        
 
         /* Dynamic Island Styling */
         .dynamic-island {
@@ -375,7 +376,10 @@
         <header class="w-full flex justify-center">
             <div class="header-panel flex flex-col items-center justify-center space-x-4">
                 <img src="/static/assets/images/GEN-I-SYS_logo.png" alt="GEN-I-SYS Logo" class="h-12 sm:h-16">
-                <p id="status" class="text-base sm:text-lg text-cyan-200 transition-all duration-300 h-8 mt-3">General Intelligence System</p>
+                <!-- <p id="status" class="text-base sm:text-lg text-cyan-200 transition-all duration-300 h-8 mt-3">General Intelligence System</p> -->
+            <p id="status" class="text-base sm:text-lg text-cyan-200 transition-all duration-300 h-8 mt-3">
+                <span id="status-line">Click the mic to activate</span>
+            </p>
             </div>
         </header>
 
@@ -455,10 +459,34 @@
         const chatPopupOverlay = document.getElementById('chatPopupOverlay');
         const toggleChatPopupButton = document.getElementById('toggleChatPopupButton');
         const closeChatPopupButton = document.getElementById('closeChatPopupButton');
+        
+      
+        const statusLine = document.getElementById('status-line');
+
+        function setStatusTextWrapped(text, maxLen = 32) {
+            // Split text into lines without breaking words
+            let words = text.split(' ');
+            let lines = [];
+            let line = '';
+            for (let word of words) {
+                if ((line + word).length > maxLen) {
+                    lines.push(line.trim());
+                    line = '';
+                }
+                line += word + ' ';
+            }
+            if (line.trim()) lines.push(line.trim());
+            // Join lines with \n for CSS white-space: pre-line
+            statusLine.textContent = lines.join('\n');
+        }
+
+        function updateStatusText(text) {
+            setStatusTextWrapped(text || '...');
+        }
 
 
         if (!isSupported) {
-            statusText.textContent = "Voice AI not supported here.";
+            updateStatusText("Voice AI not supported here.")
             micButton.disabled = true;
             micButton.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -513,7 +541,7 @@
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
             } catch (err) {
                 console.error("Error setting up audio context:", err);
-                statusText.textContent = "Microphone access denied.";
+                updateStatusText("Microphone access denied.")
                 isListening = false;
                 updateUIState();
             }
@@ -531,7 +559,8 @@
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     interimTranscript += event.results[i][0].transcript;
                 }
-                statusText.textContent = interimTranscript || '...';
+
+                updateStatusText(interimTranscript || '...')
             };
             
             recognition.onend = () => {
@@ -540,7 +569,7 @@
             
             recognition.onerror = (event) => {
                 console.error("Speech recognition error:", event.error);
-                if (event.error === 'no-speech') statusText.textContent = 'Did not hear anything...';
+                if (event.error === 'no-speech') updateStatusText('Did not hear anything...');
             };
         }
 
@@ -551,13 +580,13 @@
                 if (!audioContext) return;
                 setupSpeechRecognition();
                 recognition.start();
-                statusText.textContent = "Say something...";
+                updateStatusText("Say something...");
             } else {
                 if (recognition) recognition.stop();
                 if (audioContext && audioContext.state !== 'closed') {
                     audioContext.close().then(() => audioContext = null);
                 }
-                statusText.textContent = "Click the orb to activate";
+              updateStatusText("Click the orb to activate");
             }
             updateUIState();
         }
