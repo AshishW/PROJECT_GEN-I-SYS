@@ -35,7 +35,7 @@
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 ### 🎥 Demo Video: Searching with chat
-![demo_search](app/static/assets/videos/searching_cake_recipie.gif)
+![demo_search](app/static/assets/videos/searching_cake_recipe.gif)
 ---
 
 ### 🏛️ Architecture
@@ -152,7 +152,7 @@ Follow these steps to get the project running locally.
 
 ### ⭐ Support the Project
 
-If you find GEN-I-SYS helpful, please consider giving it a star on GitHub! Your support helps make the project better.
+If you like this project, please consider giving it a star on GitHub! Your support helps make the project better.
 
 [![GitHub stars](https://img.shields.io/github/stars/AshishW/PROJECT_GEN-I-SYS.svg?style=social&label=Star)](https://github.com/AshishW/PROJECT_GEN-I-SYS)
 
