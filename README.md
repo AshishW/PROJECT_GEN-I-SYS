@@ -1,7 +1,6 @@
 # GEN-I-SYS: The General Intelligence System
-<div align='center'>
 ![logo](app/static/assets/images/GEN-I-SYS_logo.png)
-</div>
+
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
@@ -36,13 +35,7 @@
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 ### 🎥 Demo Video: Searching with chat
-
-<div align="center">
-    <video width="100%" controls>
-        <source src="app/static/assets/videos/searching_cake_recipie.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-</div>
+![demo_search](app/static/assets/videos/searching_cake_recipie.mp4)
 ---
 
 ### 🏛️ Architecture
