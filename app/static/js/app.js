@@ -26,6 +26,18 @@ let currentMessageId = null;
 
 // SSE handlers
 function connectSSE() {
+  // If we have an existing connection, terminate the existing session first
+  if (eventSource) {
+    // Call terminate endpoint to clean up the server-side session
+    fetch(`/terminate/${sessionId}`, { 
+      method: 'POST'
+    }).then(() => {
+      console.log("Previous session terminated");
+    }).catch(err => {
+      console.error("Failed to terminate session:", err);
+    });
+  }
+
   // Connect to SSE endpoint
   eventSource = new EventSource(sse_url + "?is_audio=" + is_audio);
 
@@ -300,8 +312,9 @@ startAudioButton.addEventListener("click", async () => {
     stopAudio();
     if (eventSource) {
       eventSource.close();
-      eventSource = null;
     }
+    // Reconnect with non-audio mode
+    connectSSE();
     startAudioButton.disabled = false;
     startAudioButton.classList.remove('listening-glow');
   }
