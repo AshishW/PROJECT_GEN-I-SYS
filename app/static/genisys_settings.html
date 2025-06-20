@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet"> -->
+    <style>
+        /* Match main page theme for settings panel */
+        body {
+            font-family: monospace, sans-serif;
+            background: #0a1015;
+            color: #bffcff;
+            position: relative;
+        }
+        
+
+        /* Graph-like background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.08) 0%, transparent 20%);
+            background-size: 
+                35px 35px,
+                35px 35px,
+                100% 100%;
+            animation: grid-pulse 8s infinite ease-in-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Animated nodes at grid intersections */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 35px 35px, rgba(0, 255, 255, 0.15) 1px, transparent 2px);
+            background-size: 35px 35px;
+            animation: nodes-pulse 4s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Ambient technology glow */
+        .ambient-tech-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(0, 134, 255, 0.06) 0%, rgba(0, 0, 0, 0) 25%),
+                radial-gradient(circle at 70% 80%, rgba(0, 255, 247, 0.08) 0%, rgba(0, 0, 0, 0) 30%);
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        @keyframes grid-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes nodes-pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.6; }
+        }
+
+        /* HUD Borders */
+        .corner-border {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            z-index: 20;
+            pointer-events: none;
+        }
+        .corner-border.top-left { top: 1.5rem; left: 1.5rem; border-right: none; border-bottom: none; }
+        .corner-border.top-right { top: 1.5rem; right: 1.5rem; border-left: none; border-bottom: none; }
+        .corner-border.bottom-left { bottom: 1.5rem; left: 1.5rem; border-right: none; border-top: none; }
+        .corner-border.bottom-right { bottom: 1.5rem; right: 1.5rem; border-left: none; border-top: none; }
+
+        /* Glass Panel for Settings */
+        .glass-panel {
+            background: rgba(9, 28, 46, 0.6);
+            border: 1.5px solid rgba(0, 255, 247, 0.7);
+            box-shadow: 0 0 32px 0 rgba(0, 255, 247, 0.2), 0 0 0 1.5px rgba(0, 255, 247, 0.13) inset;
+            backdrop-filter: blur(20px) brightness(1.08) saturate(1.2);
+            -webkit-backdrop-filter: blur(20px) brightness(1.08) saturate(1.2);
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Glassmorphism enhancement with light reflection */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-15deg);
+            pointer-events: none;
+            animation: glass-shine 8s infinite ease-in-out;
+        }
+        
+        /* Inner glass highlight */
+        .glass-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0.08) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            border-radius: 1rem 1rem 0 0;
+            pointer-events: none;
+        }
+        
+        @keyframes glass-shine {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
+        }
+        
+        /* Custom form styles */
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: rgba(0, 20, 30, 0.55);
+            border: 1.5px solid #00fff7;
+            color: #00fff7;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300ffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 0 0 rgba(0, 255, 247, 0.4);
+        }
+        
+        /* Dropdown animation and hover effects */
+        .custom-select:hover {
+            background-color: rgba(0, 30, 40, 0.65);
+            border-color: #4dffff;
+            box-shadow: 0 0 12px rgba(0, 255, 247, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .custom-select:focus {
+            outline: none;
+            background-color: rgba(0, 35, 45, 0.75);
+            border-color: #7fffff;
+            box-shadow: 0 0 0 3px rgba(0, 255, 247, 0.3), 0 0 16px rgba(0, 255, 247, 0.5) inset;
+            transform: translateY(-2px);
+            animation: pulse-border 1.5s infinite ease-in-out;
+        }
+        
+        /* Animated dropdown arrow */
+        .custom-select:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%237fffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        }
+        
+        /* Animation for the border glow */
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 3px rgba(0, 255, 247, 0.3), 0 0 16px rgba(0, 255, 247, 0.3) inset; }
+            50% { box-shadow: 0 0 0 3px rgba(0, 255, 247, 0.6), 0 0 16px rgba(0, 255, 247, 0.6) inset; }
+            100% { box-shadow: 0 0 0 3px rgba(0, 255, 247, 0.3), 0 0 16px rgba(0, 255, 247, 0.3) inset; }
+        }
+        
+        /* Style for the dropdown options */
+        .custom-select option {
+            background: #061a23;
+            color: #00fff7;
+            padding: 10px;
+            margin: 5px;
+        }
+        
+        /* Animation for select on open/close */
+        .custom-select:focus option:hover {
+            background-color: rgba(0, 255, 247, 0.2);
+        }
+
+        /* Add dropdown opening animation with JavaScript */
+        .select-opening {
+            animation: select-open 0.3s forwards ease-out;
+        }
+        
+        .select-closing {
+            animation: select-close 0.2s forwards ease-in;
+        }
+        
+        @keyframes select-open {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes select-close {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-5px); }
+        }
+        
+        /* Control Buttons */
+        .control-button {
+            background-color: rgba(0, 255, 247, 0.10);
+            border: 1.5px solid #00fff7;
+            color: #00fff7;
+            text-shadow: 0 0 6px #00fff799;
+            box-shadow: 0 0 8px #00fff722 inset;
+            font-family: 'Orbitron', monospace, sans-serif;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .control-button:hover {
+            background-color: rgba(0, 255, 247, 0.22);
+            box-shadow: 0 0 18px #00fff7cc, 0 0 8px #00fff744 inset;
+        }
+        .control-button.primary {
+            background-color: rgba(0, 255, 247, 0.22);
+            color: #0ff;
+            border-color: #0ff;
+            box-shadow: 0 0 16px #00fff799;
+        }
+
+        /* Hologram Effect */
+        .hologram-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 100%;
+            padding-bottom: 3%; /* Add space at the bottom */
+        }
+        .hologram-base {
+            width: 80%;
+            height: 30px;
+            background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.4) 0%, rgba(0, 255, 255, 0) 70%);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            animation: pulse-glow 3s infinite ease-in-out;
+            z-index: 5;
+        }
+        .hologram-image {
+             opacity: 1;
+             animation: hologram-flicker 5s infinite linear;
+             max-height: 85%; /* Adjusted max-height */
+             position: relative; /* Ensure z-index works */
+             z-index: 10; /* Bring image in front of the base */
+             display: inline-block;
+             overflow: hidden;
+        }
+        .hologram-image img {
+          display: block;
+          width: 100%;
+          height: auto;
+          filter: brightness(1.2) contrast(1.1);
+        }
+        .hologram-image::before,
+        .hologram-image::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          background: inherit;
+          z-index: 2;
+          pointer-events: none;
+        }
+        .hologram-image::before {
+          background: url('./assets/images/genisys_bot-removebg.png');
+          left: 2px;
+          text-shadow: -2px 0 #0ff;
+          mix-blend-mode: lighten;
+          opacity: 0.7;
+          animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        .hologram-image::after {
+          background: url('./assets/images/genisys_bot-removebg.png');
+          left: -2px;
+          text-shadow: -2px 0 #f0f;
+          mix-blend-mode: lighten;
+          opacity: 0.7;
+          animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+
+        /* Add this new element for the upward ambient light */
+        .hologram-ambient {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 60%;
+            pointer-events: none;
+            z-index: 6;
+            background: radial-gradient(ellipse at 50% 100%, 
+                rgba(0,255,255,0.18) 0%, 
+                rgba(0,255,255,0.12) 30%, 
+                rgba(0,255,255,0.08) 60%, 
+                rgba(0,255,255,0) 100%);
+            filter: blur(12px) brightness(1.2) saturate(1.5);
+            opacity: 0.85;
+            animation: ambient-glitch 2.2s infinite steps(1, end) alternate;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+        @keyframes hologram-flicker {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.75; }
+            52% { opacity: 0.6; }
+            54% { opacity: 0.8; }
+            75% { opacity: 0.78; }
+        }
+        @keyframes glitch-anim-1 {
+          0% { clip-path: inset(0 0 80% 0); transform: translate(-2px, -2px);}
+          20% { clip-path: inset(10% 0 60% 0); transform: translate(2px, 2px);}
+          40% { clip-path: inset(20% 0 40% 0); transform: translate(-2px, 2px);}
+          60% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -2px);}
+          80% { clip-path: inset(40% 0 10% 0); transform: translate(-2px, 2px);}
+          100% { clip-path: inset(0 0 80% 0); transform: translate(0, 0);}
+        }
+        @keyframes glitch-anim-2 {
+          0% { clip-path: inset(80% 0 0 0); transform: translate(2px, 2px);}
+          20% { clip-path: inset(60% 0 10% 0); transform: translate(-2px, -2px);}
+          40% { clip-path: inset(40% 0 20% 0); transform: translate(2px, -2px);}
+          60% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 2px);}
+          80% { clip-path: inset(10% 0 40% 0); transform: translate(2px, -2px);}
+          100% { clip-path: inset(80% 0 0 0); transform: translate(0, 0);}
+        }
+        @keyframes ambient-glitch {
+            0% { opacity: 0.85; filter: blur(12px) brightness(1.2) saturate(1.5); }
+            10% { opacity: 0.95; filter: blur(14px) brightness(1.3) saturate(2); }
+            20% { opacity: 0.7; filter: blur(10px) brightness(1.1) saturate(1.2); }
+            30% { opacity: 0.9; filter: blur(13px) brightness(1.4) saturate(1.7); }
+            40% { opacity: 0.8; filter: blur(11px) brightness(1.2) saturate(1.3); }
+            50% { opacity: 1; filter: blur(16px) brightness(1.5) saturate(2.2); }
+            60% { opacity: 0.7; filter: blur(10px) brightness(1.1) saturate(1.1); }
+            70% { opacity: 0.92; filter: blur(13px) brightness(1.3) saturate(1.8); }
+            80% { opacity: 0.8; filter: blur(12px) brightness(1.2) saturate(1.4); }
+            90% { opacity: 0.97; filter: blur(15px) brightness(1.4) saturate(2); }
+            100% { opacity: 0.85; filter: blur(12px) brightness(1.2) saturate(1.5); }
+        }
+
+        .text-glow {
+            color: #00fff7;
+            text-shadow: 0 0 12px #00fff7, 0 0 32px #00fff799;
+            letter-spacing: 2px;
+        }
+
+        label,
+        .custom-select {
+            color: #00fff7 !important;
+            font-family: 'Orbitron', monospace, sans-serif;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- HUD Elements -->
+    <div class="corner-border top-left"></div>
+    <div class="corner-border top-right"></div>
+    <div class="corner-border bottom-left"></div>
+    <div class="corner-border bottom-right"></div>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid min-h-screen flex flex-col lg:flex-row items-center justify-center p-6 sm:p-8 gap-8 lg:gap-4 xl:gap-2">
+        
+        <!-- Left Side: Hologram Display -->
+        <div class="w-full lg:w-1/2 h-96 lg:h-full flex items-center justify-center">
+            <div class="hologram-container w-full h-full">
+                 <div class="hologram-base"></div>
+                 <div class="hologram-ambient"></div> <!-- Add this line -->
+                 <div class="hologram-image">
+                    <img src="./assets/images/genisys_bot-removebg.png" alt="Hologram" />
+                 </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Settings Panel -->
+        <div class="w-full lg:w-1/2 flex justify-center items-center">
+            <div class="glass-panel w-full max-w-md p-6 sm:p-8 space-y-8">
+                <h1 class="text-center text-3xl font-bold text-glow">CUSTOMIZE</h1>
+                
+                <!-- Voice Selection -->
+                <div class="space-y-2">
+                    <label for="voice-select" class="text-cyan-200">VOICE</label>
+                    <select id="voice-select" class="custom-select w-full p-3 rounded-lg text-lg">
+                        <option>Puck (Default)</option>
+                        <option>Charon</option>
+                        <option>Kore</option>
+                        <option>Fenrir</option>
+                        <option>Aoede</option>
+                        <option>Leda</option>
+                        <option>Orus</option>
+                        <option>Zephyr</option>
+                    </select>
+                </div>
+                
+                <!-- Persona Selection -->
+                <div class="space-y-2">
+                    <label for="persona-select" class="text-cyan-200">PERSONA</label>
+                    <select id="persona-select" class="custom-select w-full p-3 rounded-lg text-lg">
+                        <option>Professional</option>
+                        <option>Friendly (Default)</option>
+                        <option>Sarcastic</option>
+                        <option>Enthusiastic</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-6 flex justify-between gap-4">
+                     <button id="reset-btn" class="control-button w-1/2 py-3 rounded-lg text-xl">RESET</button>
+                     <button id="save-btn" class="control-button primary w-1/2 py-3 rounded-lg text-xl">SAVE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Enhanced Dropdown Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectElements = document.querySelectorAll('.custom-select');
+            
+            selectElements.forEach(select => {
+                // Add click sound effect
+                select.addEventListener('mousedown', function() {
+                    // Optional: Play a subtle click sound when dropdown is activated
+                    // const clickSound = new Audio('path/to/subtle-click.mp3');
+                    // clickSound.volume = 0.3;
+                    // clickSound.play();
+                    
+                    this.classList.add('select-opening');
+                });
+                
+                // Handle focus events
+                select.addEventListener('focus', function() {
+                    this.style.transition = 'all 0.3s ease';
+                });
+                
+                // Handle blur events
+                select.addEventListener('blur', function() {
+                    this.classList.remove('select-opening');
+                    this.classList.add('select-closing');
+                    
+                    // Remove the closing animation class after animation completes
+                    setTimeout(() => {
+                        this.classList.remove('select-closing');
+                    }, 200);
+                });
+                
+                // Subtle hover effect for options
+                select.addEventListener('change', function() {
+                    // Optional: Play selection confirmation sound
+                    // const selectSound = new Audio('path/to/select-confirm.mp3');
+                    // selectSound.volume = 0.2;
+                    // selectSound.play();
+                    
+                    // Add a quick flash effect on selection
+                    this.style.boxShadow = '0 0 20px rgba(0, 255, 247, 0.8), 0 0 30px rgba(0, 255, 247, 0.6) inset';
+                    setTimeout(() => {
+                        this.style.boxShadow = ''; // Reset to CSS default
+                    }, 300);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

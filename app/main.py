@@ -22,7 +22,7 @@ from google.genai.types import (
 from google.adk.runners import InMemoryRunner
 from google.adk.agents import LiveRequestQueue
 from google.adk.agents.run_config import RunConfig
-
+from google.genai.types import SpeechConfig, VoiceConfig, PrebuiltVoiceConfig
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
@@ -40,7 +40,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 load_dotenv()
 
 APP_NAME = "ADK Streaming example"
-
+VOICE= 'Puck' # Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, and Zephyr
 
 async def start_agent_session(user_id, is_audio=False):
     """Starts an agent session"""
@@ -59,7 +59,14 @@ async def start_agent_session(user_id, is_audio=False):
 
     # Set response modality
     modality = "AUDIO" if is_audio else "TEXT"
-    run_config = RunConfig(response_modalities=[modality])
+    run_config = RunConfig(
+        response_modalities=[modality],
+        speech_config=SpeechConfig(
+                voice_config=VoiceConfig(
+                    prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=VOICE)
+                )
+        ) if is_audio else None,
+        )
 
     # Create a LiveRequestQueue for this session
     live_request_queue = LiveRequestQueue()
@@ -212,3 +219,24 @@ async def send_message_endpoint(user_id: int, request: Request):
         return {"error": f"Mime type not supported: {mime_type}"}
 
     return {"status": "sent"}
+
+
+@app.post("/terminate/{user_id}")
+async def terminate_session(user_id: int):
+    """Terminates an agent session"""
+    user_id_str = str(user_id)
+    
+    # Get the live request queue for this user
+    live_request_queue = active_sessions.get(user_id_str)
+    if not live_request_queue:
+        return {"error": "Session not found"}
+    
+    # Close the request queue
+    live_request_queue.close()
+    
+    # Remove from active sessions
+    if user_id_str in active_sessions:
+        del active_sessions[user_id_str]
+    
+    print(f"Client #{user_id} session terminated")
+    return {"status": "terminated"}
