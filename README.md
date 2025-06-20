@@ -35,7 +35,7 @@
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 ### 🎥 Demo Video: Searching with chat
-![demo_search](app/static/assets/videos/searching_cake_recipie.mp4)
+![demo_search](app/static/assets/videos/searching_cake_recipie.gif)
 ---
 
 ### 🏛️ Architecture
