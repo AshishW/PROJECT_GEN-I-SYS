@@ -1,6 +1,7 @@
 /**
  * app.js: JS code for the voice assistant app.
  */
+export { updateSettings, loadSettings }; //exporting for components.js
 
 // Import sound utilities
 import { playSound } from './sound-utils.js';
@@ -11,12 +12,18 @@ import { playSound } from './sound-utils.js';
 
 // Connect the server with SSE
 const sessionId = Math.random().toString().substring(10);
+// Store sessionId in sessionStorage for other components to use
+sessionStorage.setItem('sessionId', sessionId);
 const sse_url =
   "http://" + window.location.host + "/events/" + sessionId;
 const send_url =
   "http://" + window.location.host + "/send/" + sessionId;
 let eventSource = null;
 let is_audio = false;
+let currentSettings = {
+    voice: 'Puck',
+    persona: 'Friendly'
+};
 
 // Get DOM elements
 const messageForm = document.getElementById("messageForm");
@@ -37,9 +44,15 @@ function connectSSE() {
       console.error("Failed to terminate session:", err);
     });
   }
-
+  
+  const settings = loadSettings();
+  const params = new URLSearchParams({
+        is_audio: is_audio.toString(),
+        voice: settings.voice.split(' ')[0], // Remove "(Default)" if present
+        persona: settings.persona.split(' ')[0]
+    });
   // Connect to SSE endpoint
-  eventSource = new EventSource(sse_url + "?is_audio=" + is_audio);
+  eventSource = new EventSource(`${sse_url}?${params}`); //with query params
 
   // Handle connection open
   eventSource.onopen = function () {
@@ -319,3 +332,28 @@ startAudioButton.addEventListener("click", async () => {
     startAudioButton.classList.remove('listening-glow');
   }
 });
+
+// For Settings component:
+
+// Load saved settings or use defaults
+function loadSettings() {
+    const saved = localStorage.getItem('genisys-settings');
+    if (saved) {
+        currentSettings = JSON.parse(saved);
+    }
+    return currentSettings;
+}
+
+async function updateSettings(settings) {
+    currentSettings = settings;
+    localStorage.setItem('genisys-settings', JSON.stringify(settings));
+    
+    // Terminate existing session
+    if (eventSource) {
+        await fetch(`/terminate/${sessionId}`, { method: 'POST' });
+        eventSource.close();
+    }
+    
+    // Reconnect with new settings
+    connectSSE();
+}

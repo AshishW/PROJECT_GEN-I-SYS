@@ -28,7 +28,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from ai_assistant.agent import root_agent
+from ai_assistant.agent import create_agent  # Add this import
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
@@ -40,15 +40,14 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 load_dotenv()
 
 APP_NAME = "ADK Streaming example"
-VOICE= 'Puck' # Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, and Zephyr
+# VOICE= 'Puck' # Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, and Zephyr
 
-async def start_agent_session(user_id, is_audio=False):
+async def start_agent_session(user_id, is_audio=False, voice = 'Puck', persona = 'Friendly'):
     """Starts an agent session"""
-
-    # Create a Runner
+    # Create Runner with dynamic agent
     runner = InMemoryRunner(
         app_name=APP_NAME,
-        agent=root_agent,
+        agent=create_agent(persona),  # Create agent with specified persona
     )
 
     # Create a Session
@@ -63,7 +62,7 @@ async def start_agent_session(user_id, is_audio=False):
         response_modalities=[modality],
         speech_config=SpeechConfig(
                 voice_config=VoiceConfig(
-                    prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=VOICE)
+                    prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=voice)
                 )
         ) if is_audio else None,
         )
@@ -151,12 +150,12 @@ async def root():
 
 
 @app.get("/events/{user_id}")
-async def sse_endpoint(user_id: int, is_audio: str = "false"):
+async def sse_endpoint(user_id: int, is_audio: str = "false", voice: str = "Puck", persona: str = "Friendly"):
     """SSE endpoint for agent to client communication"""
 
     # Start agent session
     user_id_str = str(user_id)
-    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true")
+    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true", voice = voice, persona = persona)
 
     # Store the request queue for this user
     active_sessions[user_id_str] = live_request_queue
