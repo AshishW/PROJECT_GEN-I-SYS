@@ -15,8 +15,8 @@
 ### 🖼️ Screenshots
 
 ![Main Interface](app/static/assets/images/screenshot-app.png)
-**Main Interface**
 
+![settings](app/static/assets/videos/GENISYS_Settings.gif)
 
 **GEN-I-SYS** (pronounced: GENISYS) is a sophisticated, voice-activated AI assistant featuring a futuristic, heads-up display (HUD) style interface. It's designed to be an interactive and productive companion, integrating powerful tools like a Pomodoro timer and a task manager directly into the experience. The application leverages real-time audio processing and streaming, combined with stunning 3D visualizations, to create a truly immersive user experience.
 
@@ -51,7 +51,13 @@ The project is built with a modern client-server architecture:
     *   The `ai_assistant` module processes user input and generates AI responses.
     *   Leverages Google ADK and BrowserUse for Agent workflows. 
 
+
+### 🏗️ High-Level Architecture
+
+![High-Level Architecture](app/static/assets/images/high-level-architecture.png)
+
 ---
+
 
 ### 📁 Directory Structure
 
@@ -144,10 +150,6 @@ Follow these steps to get the project running locally.
     *   `Esc`: Close any open sidebars.
 
 ---
-
-### 🏗️ High-Level Architecture
-
-![High-Level Architecture](app/static/assets/images/high-level-architecture.png)
 
 
 ### ⭐ Support the Project

@@ -40,11 +40,10 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 load_dotenv()
 
 APP_NAME = "ADK Streaming example"
-VOICE= 'Puck' # Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, and Zephyr
+# VOICE= 'Puck' # Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, and Zephyr
 
-async def start_agent_session(user_id, is_audio=False):
+async def start_agent_session(user_id, is_audio=False, voice = 'Puck'):
     """Starts an agent session"""
-
     # Create a Runner
     runner = InMemoryRunner(
         app_name=APP_NAME,
@@ -63,7 +62,7 @@ async def start_agent_session(user_id, is_audio=False):
         response_modalities=[modality],
         speech_config=SpeechConfig(
                 voice_config=VoiceConfig(
-                    prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=VOICE)
+                    prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=voice)
                 )
         ) if is_audio else None,
         )
@@ -151,12 +150,12 @@ async def root():
 
 
 @app.get("/events/{user_id}")
-async def sse_endpoint(user_id: int, is_audio: str = "false"):
+async def sse_endpoint(user_id: int, is_audio: str = "false", voice: str = "Puck", persona: str = "Friendly"):
     """SSE endpoint for agent to client communication"""
 
     # Start agent session
     user_id_str = str(user_id)
-    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true")
+    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true", voice = voice)
 
     # Store the request queue for this user
     active_sessions[user_id_str] = live_request_queue
