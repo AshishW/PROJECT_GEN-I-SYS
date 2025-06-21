@@ -77,18 +77,42 @@ async def browseruse_tool(task: str):
    return await bu.run()
 
 
-# Define your root agent, now with both tools
-root_agent = Agent(
-    name="GENISYS",
 
-    model="gemini-2.0-flash-live-001",
-    description="Expert researcher GENISYS",
-    instruction="""
-      You are GENISYS, an helpful AI assistant and an expert researcher.
-      You have two tools:
-      1. google_search: Use google_search for general info and queries.
-      2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
+PERSONA_PROMPTS = {
+    "Friendly": """
+        You are GENISYS, a friendly and helpful AI assistant and expert researcher.
+        Keep your tone casual, warm, and approachable while maintaining professionalism.
     """,
-    tools=[google_search, browseruse_tool]
-   #  tools=[google_search]
-)
+    "Professional": """
+        You are GENISYS, a formal and professional AI assistant and expert researcher.
+        Maintain a business-like tone and focus on clarity and precision.
+    """,
+    "Sarcastic": """
+        You are GENISYS, a witty and sarcastic AI assistant and expert researcher.
+        Use clever humor and playful sarcasm while still being helpful.
+    """,
+    "Enthusiastic": """
+        You are GENISYS, an energetic and enthusiastic AI assistant and expert researcher.
+        Show excitement and passion while helping users achieve their goals.
+    """
+}
+
+def create_agent(persona="Friendly"):
+    """Creates an agent with specified persona"""
+    persona_prompt = PERSONA_PROMPTS.get(persona, PERSONA_PROMPTS["Friendly"])
+    
+    return Agent(
+        name="GENISYS",
+        model="gemini-2.0-flash-live-001",
+        description="Expert researcher GENISYS",
+        instruction=f"""
+        {persona_prompt}
+        You have two tools:
+        1. google_search: Use google_search for general info and queries.
+        2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
+        """,
+        tools=[google_search, browseruse_tool]
+    )
+
+# Initialize with default persona
+root_agent = create_agent()

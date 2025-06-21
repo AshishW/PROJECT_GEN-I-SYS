@@ -315,9 +315,73 @@
         .component-styles {
             /* Styles will be injected here */
         }
+
+        /* Add these inside the existing <style> tag */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.08) 0%, transparent 20%);
+            background-size: 
+                35px 35px,
+                35px 35px,
+                100% 100%;
+            animation: grid-pulse 8s infinite ease-in-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Animated nodes at grid intersections */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 35px 35px, rgba(0, 255, 255, 0.15) 1px, transparent 2px);
+            background-size: 35px 35px;
+            animation: nodes-pulse 4s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Add these keyframe animations if not already present */
+        @keyframes grid-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes nodes-pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Ambient tech glow effect */
+        .ambient-tech-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(0, 134, 255, 0.06) 0%, rgba(0, 0, 0, 0) 25%),
+                radial-gradient(circle at 70% 80%, rgba(0, 255, 247, 0.08) 0%, rgba(0, 0, 0, 0) 30%);
+            pointer-events: none;
+            z-index: -2;
+        }
     </style>
 </head>
 <body class="text-white">
+    <!-- Add this div for ambient glow -->
+    <div class="ambient-tech-glow"></div>
 
     <!-- Sci-fi borders -->
     <div class="corner-border top-left"></div>
@@ -781,13 +845,6 @@
                 }
             });
         });
-    </script>
-</body>
-</html>
-            playSound('dynamicIsland');
-            // Settings functionality can be implemented here
-            console.log('Settings clicked');
-        }
     </script>
 </body>
 </html>
