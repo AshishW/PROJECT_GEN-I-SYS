@@ -58,7 +58,7 @@ async def browseruse_tool(task: str):
    This asynchronous function initializes and runs a BrowserUseAgent to perform
    web browser automation tasks based on the provided instructions.
    Args:
-      task (str): The task description, i.e. step by step instructions for the browser agent to execute.
+      task (str): The task description, i.e. step by step instructions for the browser agent to execute and what data to return back.
    Returns:
       The result of the browser agent's execution (type depends on the specific task).
    Example:
@@ -109,7 +109,7 @@ def create_agent(persona="Friendly"):
         {persona_prompt}
         You have two tools:
         1. google_search: Use google_search for general info and queries.
-        2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply after the task is finished.
+        2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply with results after the task is finished.
         """,
         tools=[google_search, browseruse_tool]
     )
