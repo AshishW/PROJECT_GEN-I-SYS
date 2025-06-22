@@ -31,6 +31,32 @@ const messageInput = document.getElementById("message");
 const messagesDiv = document.getElementById("messages");
 let currentMessageId = null;
 
+// Move template references to document ready and store them
+let userMessageTemplate;
+let botMessageTemplate;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Get templates
+    userMessageTemplate = document.getElementById('user-message-template');
+    botMessageTemplate = document.getElementById('bot-message-template');
+
+    // Initialize chat popup handlers
+    const toggleChatPopupButton = document.getElementById('toggleChatPopupButton');
+    const chatPopupOverlay = document.getElementById('chatPopupOverlay');
+    
+    if (toggleChatPopupButton && chatPopupOverlay) {
+        toggleChatPopupButton.addEventListener('click', () => {
+            chatPopupOverlay.classList.remove('hidden');
+            playSound('uiInteract');
+        });
+    }
+
+    // Add submit handler to form if it exists
+    if (messageForm) {
+        addSubmitHandler();
+    }
+});
+
 // SSE handlers
 function connectSSE() {
   // If we have an existing connection, terminate the existing session first
@@ -71,22 +97,51 @@ function connectSSE() {
     const message_from_server = JSON.parse(event.data);
     console.log("[AGENT TO CLIENT] ", message_from_server);
 
-    // Check if the turn is complete
-    // if turn complete, add new message
-    if (
-      message_from_server.turn_complete &&
-      message_from_server.turn_complete == true
-    ) {
-      currentMessageId = null;
-      return;
+    if (message_from_server.turn_complete && message_from_server.turn_complete == true) {
+        currentMessageId = null;
+        // Remove typing animation and format markdown when turn completes
+        const lastMessage = document.querySelector('.typing-animation');
+        if (lastMessage) {
+            lastMessage.classList.remove('typing-animation');
+            // Convert accumulated text to markdown
+            lastMessage.innerHTML = marked.parse(lastMessage.textContent);
+        }
+        return;
+    }
+
+    // Handle text messages
+    if (message_from_server.mime_type == "text/plain") {
+        if (currentMessageId == null) {
+            try {
+                // Create new bot message using template
+                const botMessageElement = botMessageTemplate.content.cloneNode(true);
+                const messageText = botMessageElement.querySelector('.typing-animation');
+                
+                if (!messageText) {
+                    throw new Error('Message text element not found in bot template');
+                }
+
+                currentMessageId = Math.random().toString(36).substring(7);
+                messageText.id = currentMessageId;
+                messageText.textContent = message_from_server.data;
+                messagesDiv.appendChild(botMessageElement);
+            } catch (error) {
+                console.error('Error creating bot message:', error);
+            }
+        } else {
+            // Append to existing message
+            const messageText = document.getElementById(currentMessageId);
+            if (messageText) {
+                messageText.textContent += message_from_server.data;
+            }
+        }
+        
+        // Scroll to bottom
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     // Check for interrupt message
-    if (
-      message_from_server.interrupted &&
-      message_from_server.interrupted === true
-    ) {
-      // Stop audio playback if it's playing
+    if (message_from_server.interrupted && message_from_server.interrupted === true) {
       if (audioPlayerNode) {
         audioPlayerNode.port.postMessage({ command: "endOfAudio" });
       }
@@ -96,25 +151,6 @@ function connectSSE() {
     // If it's audio, play it
     if (message_from_server.mime_type == "audio/pcm" && audioPlayerNode) {
       audioPlayerNode.port.postMessage(base64ToArray(message_from_server.data));
-    }
-
-    // If it's a text, print it
-    if (message_from_server.mime_type == "text/plain") {
-      // add a new message for a new turn
-      if (currentMessageId == null) {
-        currentMessageId = Math.random().toString(36).substring(7);
-        const message = document.createElement("p");
-        message.id = currentMessageId;
-        // Append the message element to the messagesDiv
-        messagesDiv.appendChild(message);
-      }
-
-      // Add message text to the existing message element
-      const message = document.getElementById(currentMessageId);
-      message.innerHTML += message_from_server.data;
-
-      // Scroll down to the bottom of the messagesDiv
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
   };
 
@@ -132,27 +168,45 @@ function connectSSE() {
 }
 connectSSE();
 
-// Add submit handler to the form
+// Update the addSubmitHandler function
 function addSubmitHandler() {
-  messageForm.onsubmit = function (e) {
-    e.preventDefault();
-    const message = messageInput.value;
-    if (message) {
-      // Play UI interaction sound when sending a message
-      playSound('uiInteract');
-      
-      const p = document.createElement("p");
-      p.textContent = "> " + message;
-      messagesDiv.appendChild(p);
-      messageInput.value = "";
-      sendMessage({
-        mime_type: "text/plain",
-        data: message,
-      });
-      console.log("[CLIENT TO AGENT] " + message);
-    }
-    return false;
-  };
+    messageForm.onsubmit = function (e) {
+        e.preventDefault();
+        const message = messageInput.value;
+        if (message) {
+            try {
+                if (!userMessageTemplate) {
+                    throw new Error('User message template not initialized');
+                }
+
+                // Clone the template
+                const userMessageElement = userMessageTemplate.content.cloneNode(true);
+                const messageText = userMessageElement.querySelector('.text-cyan-100');
+                
+                if (!messageText) {
+                    throw new Error('Message text element not found in template');
+                }
+
+                // Set the message text and append
+                messageText.textContent = message;
+                messagesDiv.appendChild(userMessageElement);
+                messageInput.value = "";
+                
+                // Send to server
+                sendMessage({
+                  mime_type: "text/plain",
+                  data: message,
+                });
+                
+                // Scroll to bottom
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                
+            } catch (error) {
+                console.error('Error creating message:', error);
+            }
+        }
+        return false;
+    };
 }
 
 // Send a message to the server via HTTP POST

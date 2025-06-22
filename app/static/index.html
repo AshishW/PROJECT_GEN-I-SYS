@@ -377,6 +377,113 @@
             pointer-events: none;
             z-index: -2;
         }
+
+        .typing-animation::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes typing {
+            0%, 100% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+
+        /* Add smooth transitions for message hover effects */
+        .message {
+            transition: all 0.2s ease;
+        }
+
+        .message:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Add a subtle glow effect to the chat popup */
+        #chatPopup {
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Markdown Styling */
+.markdown-body {
+    color: #94a3b8;
+}
+
+.markdown-body code {
+    background: rgba(0, 255, 255, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.markdown-body pre {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1em;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    overflow-x: auto;
+}
+
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3 {
+    color: #e2e8f0;
+    margin: 1em 0 0.5em;
+}
+
+.markdown-body ul, 
+.markdown-body ol {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+.markdown-body li {
+    margin: 0.25em 0;
+}
+
+.markdown-body blockquote {
+    border-left: 3px solid rgba(0, 255, 255, 0.3);
+    margin: 1em 0;
+    padding-left: 1em;
+    color: #64748b;
+}
+
+.markdown-body a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+.markdown-body a:hover {
+    text-decoration: underline;
+}
+
+.markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    padding: 0.5em;
+}
+
+.markdown-body th {
+    background: rgba(0, 255, 255, 0.1);
+}
     </style>
 </head>
 <body class="text-white">
@@ -470,26 +577,69 @@
 
     <!-- Chat Popup (hidden by default) -->
     <div id="chatPopupOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center hidden transition-opacity duration-300 ease-in-out">
-        <div id="chatPopup" class="w-11/12 max-w-md md:max-w-lg h-[70vh] max-h-[600px] bg-slate-900/70 backdrop-blur-xl border border-cyan-400/40 rounded-2xl shadow-2xl shadow-cyan-500/30 flex flex-col overflow-hidden">
-            <!-- Chat Header -->
-            <div class="flex justify-between items-center p-4 border-b border-cyan-400/30">
-                <h2 class="text-xl font-bold text-cyan-200 text-glow">Chat</h2>
-                <button id="closeChatPopupButton" class="text-cyan-300 hover:text-cyan-100 transition-colors">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div id="chatPopup" class="w-11/12 max-w-4xl h-[85vh] bg-slate-900/70 backdrop-blur-xl border border-cyan-400/40 rounded-2xl shadow-2xl shadow-cyan-500/30 flex flex-col overflow-hidden relative">
+            <!-- Cyber grid background for chat -->
+            <div class="absolute inset-0 pointer-events-none">
+                <div class="w-full h-full" style="
+                    background-image: 
+                        linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+                    background-size: 35px 35px;
+                    opacity: 0.5;
+                "></div>
+            </div>
+
+            <!-- Chat Header with sci-fi borders -->
+            <div class="relative flex justify-between items-center p-4 border-b border-cyan-400/30 bg-slate-900/50">
+                <div class="corner-border top-left"></div>
+                <div class="corner-border top-right"></div>
+                <h2 class="text-2xl font-bold text-cyan-200 text-glow px-4">NEURAL INTERFACE</h2>
+                <button id="closeChatPopupButton" class="text-cyan-300 hover:text-cyan-100 transition-colors p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
+
             <!-- Messages Area -->
-            <div id="messages" class="flex-grow p-4 overflow-y-auto space-y-3 text-sm text-cyan-100/90">
-                <!-- Messages will be appended here dynamically -->
+            <div id="messages" class="flex-grow p-6 overflow-y-auto space-y-4 text-base">
+                <!-- Message templates -->
+                <template id="user-message-template">
+                    <div class="flex justify-end mb-4 animate-fade-in">
+                        <div class="message user max-w-[80%] bg-cyan-500/10 border border-cyan-400/30 rounded-lg p-3 hover:border-cyan-400/50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <p class="text-cyan-100"></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template id="bot-message-template">
+                    <div class="flex justify-start mb-4 animate-fade-in">
+                        <div class="message bot max-w-[80%] bg-slate-800/50 border border-cyan-400/20 rounded-lg p-3">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center">
+                                    <span class="text-cyan-300 text-sm">AI</span>
+                                </div>
+                                <div class="flex-grow markdown-body">
+                                    <p class="text-cyan-100 typing-animation prose prose-invert"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
+
             <!-- Message Input Form -->
-            <form id="messageForm" class="p-4 border-t border-cyan-400/30">
-                <div class="flex items-center gap-2">
-                    <input type="text" id="message" name="message" placeholder="Type your message..."
-                           class="flex-grow bg-cyan-900/40 backdrop-blur-sm text-cyan-100 border border-cyan-400/60 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-cyan-400/80 placeholder-cyan-300/70 text-sm">
+            <form id="messageForm" class="p-4 border-t border-cyan-400/30 bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <input type="text" id="message" name="message" placeholder="Enter command..."
+                        class="flex-grow bg-slate-800/50 text-cyan-100 border border-cyan-400/40 rounded-lg p-4 focus:outline-none focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 placeholder-cyan-300/50 text-base">
                     <button type="submit" id="sendButton" disabled
-                            class="bg-cyan-500/40 hover:bg-cyan-500/60 backdrop-blur-md border border-cyan-400/70 rounded-lg p-3 transition-all duration-300 text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/80 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        class="bg-cyan-500/20 hover:bg-cyan-500/30 backdrop-blur-md border border-cyan-400/50 rounded-lg p-4 transition-all duration-300 text-cyan-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
                     </button>
                 </div>
             </form>

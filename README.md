@@ -18,6 +18,8 @@
 
 ![settings](app/static/assets/videos/GENISYS_Settings.gif)
 
+![chatbot](app/static/assets/images/chat-UI.png)
+
 **GEN-I-SYS** (pronounced: GENISYS) is a sophisticated, voice-activated AI assistant featuring a futuristic, heads-up display (HUD) style interface. It's designed to be an interactive and productive companion, integrating powerful tools like a Pomodoro timer and a task manager directly into the experience. The application leverages real-time audio processing and streaming, combined with stunning 3D visualizations, to create a truly immersive user experience.
 
 ---
@@ -35,6 +37,7 @@
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 ### 🎥 Demo Video: Searching with chat
+note: (chat UI has been updated in latest version)
 ![demo_search](app/static/assets/videos/searching_cake_recipe.gif)
 ---
 
@@ -55,6 +58,7 @@ The project is built with a modern client-server architecture:
 ### 🏗️ High-Level Architecture
 
 ![High-Level Architecture](app/static/assets/images/high-level-architecture.png)
+
 
 ---
 
