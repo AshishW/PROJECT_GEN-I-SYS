@@ -484,7 +484,120 @@
 .markdown-body th {
     background: rgba(0, 255, 255, 0.1);
 }
+
+/* Code editor mode indicator */
+    #codeGenToggle.active {
+        background-color: rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+    }
+    
+    /* Tab Styles */
+    .tab-button {
+        background-color: rgba(0, 255, 255, 0.1);
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s ease-in-out;
+        color: #c8f5ff;
+    }
+    .tab-button.active {
+        background-color: rgba(0, 255, 255, 0.2);
+        border-bottom-color: #00ffff;
+    }
+    
+    /* CodeMirror Styles */
+    .CodeMirror {
+        height: 100%;
+        width: 100%;
+        border-radius: 0.5rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+        background-color: rgba(10, 20, 25, 0.5);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        caret-color: #00ffff;
+        padding: 0.5rem;
+    }
+    .CodeMirror-focused {
+        outline: none;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        border-color: rgba(0, 255, 255, 0.7);
+    }
+    .CodeMirror-linenumber {
+        color: rgba(0, 255, 255, 0.5) !important;
+    }
+    .CodeMirror-cursor {
+        border-left: 1px solid #00ffff;
+    }
+    
+    /* Custom "View Code" button for bot messages */
+    .view-code-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 255, 255, 0.15);
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        margin-top: 0.75rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .view-code-btn:hover {
+        background: rgba(0, 255, 255, 0.25);
+        box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+    }
+
+    /* Ensure the modal and editors use full height */
+#codeEditorOverlay,
+#codeEditorContainer {
+    height: 100vh !important;
+    min-height: 0 !important;
+}
+#codeEditorContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-grow {
+    flex-grow: 1 !important;
+    min-height: 0 !important;
+}
+
+.glass-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#html-editor,
+#css-editor,
+#js-editor {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.CodeMirror {
+    height: 100% !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    font-size: 1rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
     </style>
+
+    <!-- CodeMirror for code editor -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
 </head>
 <body class="text-white">
     <!-- Add this div for ambient glow -->
@@ -632,19 +745,70 @@
 
             <!-- Message Input Form -->
             <form id="messageForm" class="p-4 border-t border-cyan-400/30 bg-slate-900/50">
-                <div class="flex items-center gap-3">
-                    <input type="text" id="message" name="message" placeholder="Enter command..."
-                        class="flex-grow bg-slate-800/50 text-cyan-100 border border-cyan-400/40 rounded-lg p-4 focus:outline-none focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 placeholder-cyan-300/50 text-base">
-                    <button type="submit" id="sendButton" disabled
-                        class="bg-cyan-500/20 hover:bg-cyan-500/30 backdrop-blur-md border border-cyan-400/50 rounded-lg p-4 transition-all duration-300 text-cyan-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
-                    </button>
-                </div>
-            </form>
+    <div class="flex items-center gap-3">
+        <input type="text" id="message" name="message" placeholder="Enter command..."
+            class="flex-grow bg-slate-800/50 border border-cyan-400/30 rounded-lg p-3 text-cyan-100 focus:outline-none focus:border-cyan-400/70 focus:ring-1 focus:ring-cyan-400/70">
+        
+        <!-- Add code generation toggle button -->
+        <button id="codeGenToggle" type="button" class="p-3 rounded-lg bg-slate-800/50 border border-cyan-400/30 hover:bg-cyan-400/20 transition-colors" title="Toggle Code Generation Mode">
+            <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+        </button>
+        
+        <button id="sendButton" type="submit" class="p-3 rounded-lg bg-cyan-500/20 border border-cyan-400/50 hover:bg-cyan-400/30 transition-colors">
+            <svg class="w-6 h-6 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+        </button>
+    </div>
+</form>
         </div>
     </div>
+
+    <!-- Code Editor Modal -->
+<div id="codeEditorOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-opacity duration-300 ease-in-out">
+    <div id="codeEditorContainer" class="w-11/12 max-w-5xl h-[90vh] bg-slate-900/90 backdrop-blur-xl border border-cyan-400/40 rounded-2xl shadow-2xl shadow-cyan-500/30 flex flex-col overflow-hidden relative">
+        <!-- Header -->
+        <div class="relative flex justify-between items-center p-4 border-b border-cyan-400/30 bg-slate-900/70">
+            <h2 class="text-2xl font-bold text-cyan-200 text-glow px-4">CODE GEN-I-SYS</h2>
+            <div class="flex items-center space-x-4">
+                <button id="runCodeBtn" class="px-4 py-2 rounded-lg bg-cyan-600/70 hover:bg-cyan-500/70 transition-colors text-base font-bold">
+                    RUN
+                </button>
+                <button id="closeCodeEditorBtn" class="text-cyan-300 hover:text-cyan-100 transition-colors p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Editor & Output Grid -->
+        <div class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+            <!-- Left: Code Editor Panel -->
+            <div class="glass-panel rounded-lg flex flex-col h-full">
+                <!-- Tabs -->
+                <div class="flex border-b border-b-cyan-800/50">
+                    <button class="tab-button active flex-1 p-3" data-tab="html">HTML</button>
+                    <button class="tab-button flex-1 p-3" data-tab="css">CSS</button>
+                    <button class="tab-button flex-1 p-3" data-tab="js">JS</button>
+                </div>
+                <!-- Editor Panes -->
+                <div class="flex-grow relative p-0" style="min-height:0;">
+                    <div id="html-editor" class="w-full h-full"></div>
+                    <div id="css-editor" class="w-full h-full hidden"></div>
+                    <div id="js-editor" class="w-full h-full hidden"></div>
+                </div>
+            </div>
+
+            <!-- Right: Output Panel -->
+            <div class="glass-panel rounded-lg p-4 h-full">
+                <iframe id="code-output-frame" class="w-full h-full rounded-lg" sandbox="allow-scripts"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script type="module" src="/static/js/components.js"></script>
     <script type="module">

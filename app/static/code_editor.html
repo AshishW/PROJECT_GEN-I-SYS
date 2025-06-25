@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Code Sandbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0a0f;
+            overflow: hidden;
+            color: #e0f2f1;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* HUD Borders */
+        .corner-border {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            z-index: 50;
+            pointer-events: none;
+        }
+        .corner-border.top-left { top: 1.5rem; left: 1.5rem; border-right: none; border-bottom: none; }
+        .corner-border.top-right { top: 1.5rem; right: 1.5rem; border-left: none; border-bottom: none; }
+        .corner-border.bottom-left { bottom: 1.5rem; left: 1.5rem; border-right: none; border-top: none; }
+        .corner-border.bottom-right { bottom: 1.5rem; right: 1.5rem; border-left: none; border-top: none; }
+
+        /* Glass Panel */
+        .glass-panel {
+            background-color: rgba(10, 20, 25, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            /* Removed fixed height to allow flex-grow to manage height */
+            flex-grow: 1;
+            display: flex; /* Ensure it's a flex container for its children to grow */
+            flex-direction: column; /* Stack children vertically */
+        }
+        
+        /* Code Editor Styles */
+        .CodeMirror {
+            height: 100%;
+            width: 100%;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-family: monospace; /* font-mono */
+            font-size: 0.875rem; /* text-sm */
+            background-color: rgba(10, 20, 25, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            caret-color: #00ffff;
+            padding: 0.5rem; /* p-2 */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        /* Custom scrollbars for CodeMirror */
+        .CodeMirror-scroll {
+            overflow: auto !important; /* Ensure it explicitly has overflow for scrollbars */
+        }
+        .CodeMirror-scroll::-webkit-scrollbar {
+            width: 8px !important;
+            height: 8px !important; /* For horizontal scrollbar */
+        }
+        .CodeMirror-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-radius: 4px !important;
+        }
+        .CodeMirror-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 255, 255, 0.3) !important;
+            border-radius: 4px !important;
+        }
+        .CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 255, 255, 0.5) !important;
+        }
+
+        .CodeMirror-focused {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            border-color: rgba(0, 255, 255, 0.7);
+        }
+        .CodeMirror-linenumber {
+            color: rgba(0, 255, 255, 0.5) !important;
+        }
+        .CodeMirror-line {
+            color: #e0f2f1; /* text-white */
+        }
+        .CodeMirror-cursor {
+            border-left: 1px solid #00ffff;
+        }
+
+        /* CodeMirror Autocomplete Styles */
+        .CodeMirror-hints {
+            position: absolute;
+            z-index: 1000;
+            overflow: hidden;
+            list-style: none;
+            margin: 0;
+            padding: 2px;
+            background: #2a2a2a; /* Darker background for hints */
+            font-family: monospace;
+            font-size: 0.875rem;
+            max-height: 20em;
+            overflow-y: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 255, 255, 0.2);
+        }
+
+        .CodeMirror-hint {
+            margin: 0;
+            padding: 0 4px;
+            white-space: pre;
+            color: #e0f2f1; /* Text color */
+            cursor: pointer;
+        }
+
+        li.CodeMirror-hint-active {
+            background: rgba(0, 255, 255, 0.3); /* Active hint background */
+            color: #ffffff; /* Active hint text color */
+        }
+
+        /* Output Iframe */
+        #output-frame {
+            background-color: #fff;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        /* Tab Styles */
+        .tab-button {
+            background-color: rgba(0, 255, 255, 0.1);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-button.active {
+            background-color: rgba(0, 255, 255, 0.2);
+            border-bottom-color: #00ffff;
+        }
+
+    </style>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+    <!-- CodeMirror Autocomplete CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+</head>
+<body class="text-white">
+
+    <!-- HUD Elements -->
+    <div class="corner-border top-left"></div>
+    <div class="corner-border top-right"></div>
+    <div class="corner-border bottom-left"></div>
+    <div class="corner-border bottom-right"></div>
+
+    <!-- Main Layout -->
+    <!-- Changed h-screen to min-h-screen to allow content to dictate height if needed, but flex-col handles distribution -->
+    <div class="min-h-screen flex flex-col p-6 sm:p-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-glow">CODE GEN-I-SYS</h1>
+            <div class="flex items-center space-x-4">
+                <!-- Toggle editor button for small screens -->
+                <button id="toggle-editor-btn" class="lg:hidden px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 transition-colors text-lg font-bold">
+                    Toggle Editor
+                </button>
+                <button id="run-btn" class="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-lg font-bold">
+                    RUN
+                </button>
+            </div>
+        </header>
+
+        <!-- Editor & Output Grid -->
+        <!-- The 'grid-cols-1' ensures it's a single column by default (small screens) -->
+        <!-- 'lg:grid-cols-2' makes it two columns on large screens -->
+        <div id="main-grid" class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left: Code Editor Panel -->
+            <!-- The 'hidden' class by default for small screens, removed by JS -->
+            <!-- 'lg:flex' ensures it's always a flex container on large screens -->
+            <!-- flex-grow added directly to glass-panel and its immediate children for vertical distribution -->
+            <div id="editor-panel" class="glass-panel rounded-lg flex flex-col hidden lg:flex">
+                <!-- Tabs -->
+                <div class="flex border-b border-b-cyan-800">
+                    <button class="tab-button active flex-1 p-3" data-tab="html">HTML</button>
+                    <button class="tab-button flex-1 p-3" data-tab="css">CSS</button>
+                    <button class="tab-button flex-1 p-3" data-tab="js">JS</button>
+                </div>
+                <!-- Editor Panes - flex-grow to take remaining height -->
+                <div class="flex-grow relative p-4">
+                    <!-- CodeMirror editors will be initialized in these divs -->
+                    <div id="html-editor-container" class="w-full h-full rounded-lg hidden"></div>
+                    <div id="css-editor-container" class="w-full h-full rounded-lg hidden"></div>
+                    <div id="js-editor-container" class="w-full h-full rounded-lg hidden"></div>
+                </div>
+            </div>
+
+            <!-- Right: Output Panel -->
+            <!-- flex-grow added to output panel too -->
+            <div id="output-panel" class="glass-panel rounded-lg p-4">
+                <iframe id="output-frame" class="w-full h-full rounded-lg" sandbox="allow-scripts"></iframe>
+            </div>
+        </div>
+
+        <!-- Custom Message Box for alerts (This will remain in the parent document for consistent UI) -->
+        <div id="message-box" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-gray-800 border border-cyan-500 rounded-lg shadow-lg p-6 w-full max-w-sm text-center">
+                <p id="message-text" class="text-xl mb-4"></p>
+                <button id="message-ok-btn" class="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-lg font-bold">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <!-- CodeMirror Autocomplete Addons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/html-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closebrackets.min.js"></script>
+
+    <script>
+        // Initial code content
+        const initialHtml = `<h1>Hello, Hologram!</h1>
+<p>Your code output appears here.</p>
+<button>Click Me</button>
+<div id="myDiv"></div>`; // Added a div for JS example
+        const initialCss = `body {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column; /* Added to stack elements vertically */
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+h1 {
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+button {
+    padding: 10px 20px;
+    background-color: #00caca;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #fff;
+}
+#myDiv {
+    width: 100px;
+    height: 100px;
+    background-color: purple;
+    margin-top: 20px;
+}`;
+        const initialJs = `console.log("JavaScript executed!");
+document.querySelector('button').addEventListener('click', () => {
+    // Send a message to the parent window
+    window.parent.postMessage({ type: 'showMessage', message: 'Button clicked from iframe!' }, '*');
+});
+
+// Example for autocompletion: type "doc" or "console"
+const myElement = document.getElementById('myDiv');
+if (myElement) {
+    myElement.style.backgroundColor = 'lime';
+    console.log("Div background changed to lime.");
+}`;
+
+        const outputFrame = document.getElementById('output-frame');
+        const runBtn = document.getElementById('run-btn');
+        const tabs = document.querySelectorAll('.tab-button');
+        const editorPanel = document.getElementById('editor-panel');
+        const outputPanel = document.getElementById('output-panel');
+        const toggleEditorBtn = document.getElementById('toggle-editor-btn');
+        const mainGrid = document.getElementById('main-grid');
+
+        // Message box elements (in parent document)
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageOkBtn = document.getElementById('message-ok-btn');
+
+        // Function to display a custom message box instead of alert()
+        const showMessage = (message) => {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+        };
+
+        // Event listener for messages coming from the iframe
+        window.addEventListener('message', (event) => {
+            // It's crucial to verify the origin of the message for security in a real application.
+            // For srcdoc, the origin will be 'null'. For hosted content, it would be the domain.
+            // For this sandbox, we'll accept 'null' as the origin, but in production, you'd specify it.
+            // if (event.origin !== 'your-expected-origin' && event.origin !== 'null') return; // More secure check
+
+            if (event.data && event.data.type === 'showMessage') {
+                showMessage(event.data.message);
+            }
+        });
+
+        // Close the message box
+        messageOkBtn.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Function to trigger autocomplete as you type
+        const autoCompletionOnType = (cm) => {
+            // Only trigger if not already showing hints and the cursor is not in an empty position
+            if (!cm.state.completionActive && cm.getCursor().ch > 0) {
+                const cur = cm.getCursor();
+                const token = cm.getTokenAt(cur);
+                // Trigger for alphanumeric characters, periods, or opening tags
+                if (/[a-zA-Z0-9._]/.test(token.string) || token.string === '<' || token.string === '/' || token.string === ':') {
+                    CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
+                }
+            }
+        };
+
+        // Common CodeMirror options for all editors
+        const commonCodeMirrorOptions = {
+            theme: 'dracula',
+            lineNumbers: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete", // Manual trigger
+                "End": function(cm) { // Go to end of line for JS
+                    CodeMirror.commands.goLineEnd(cm);
+                }
+            },
+            matchBrackets: true, // Highlight matching brackets
+            autoCloseBrackets: true, // Auto-close brackets
+            autoCloseTags: true, // Auto-close HTML/XML tags
+            // Hint options apply to all editors, ensure completeSingle is false for "as you type"
+            hintOptions: { completeSingle: false }
+        };
+
+        // Initialize CodeMirror editors
+        const htmlEditor = CodeMirror(document.getElementById('html-editor-container'), {
+            mode: 'htmlmixed',
+            value: initialHtml,
+            ...commonCodeMirrorOptions, // Spread common options
+            hintOptions: { hint: CodeMirror.hint.html, ...commonCodeMirrorOptions.hintOptions }
+        });
+
+        const cssEditor = CodeMirror(document.getElementById('css-editor-container'), {
+            mode: 'css',
+            value: initialCss,
+            ...commonCodeMirrorOptions,
+            hintOptions: { hint: CodeMirror.hint.css, ...commonCodeMirrorOptions.hintOptions }
+        });
+
+        const jsEditor = CodeMirror(document.getElementById('js-editor-container'), {
+            mode: 'javascript',
+            value: initialJs,
+            ...commonCodeMirrorOptions,
+            hintOptions: { hint: CodeMirror.hint.javascript, ...commonCodeMirrorOptions.hintOptions }
+        });
+
+        // Attach the 'change' event listener for as-you-type autocompletion
+        htmlEditor.on('change', autoCompletionOnType);
+        cssEditor.on('change', autoCompletionOnType);
+        jsEditor.on('change', autoCompletionOnType);
+
+        // Editors object for easy access
+        const editors = {
+            html: { instance: htmlEditor, container: document.getElementById('html-editor-container') },
+            css: { instance: cssEditor, container: document.getElementById('css-editor-container') },
+            js: { instance: jsEditor, container: document.getElementById('js-editor-container') }
+        };
+
+        // State to manage editor visibility on small screens
+        let isEditorOpen = window.innerWidth >= 1024; // True if desktop, false for mobile initially
+
+        // Function to compile and run the code
+        const runCode = () => {
+            const html = htmlEditor.getValue();
+            const css = cssEditor.getValue();
+            const js = jsEditor.getValue();
+
+            // Construct the full HTML source for the iframe
+            const source = `
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Output</title>
+                        <style>${css}</style>
+                    </head>
+                    <body>
+                        ${html}
+                        <script>
+                            // This function is now self-contained within the iframe for demonstration,
+                            // but its call sends a message to the parent for display.
+                            function showMessage(message) {
+                                window.parent.postMessage({ type: 'showMessage', message: message }, '*');
+                            }
+
+                            // Wrap user's JavaScript in a try-catch block for better debugging
+                            try {
+                                ${js}
+                            } catch (e) {
+                                // Send error message to parent
+                                window.parent.postMessage({ type: 'showMessage', message: 'JavaScript Error: ' + e.message + '\\nSee console for details.' }, '*');
+                                console.error('Error in user script:', e);
+                            }
+                        <\/script>
+                    </body>
+                </html>
+            `;
+            
+            outputFrame.srcdoc = source; // Load the generated HTML into the iframe
+        };
+
+        // Tab switching logic
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                // Update active tab style
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show the correct editor and hide others
+                Object.keys(editors).forEach(key => {
+                    editors[key].container.classList.add('hidden');
+                    editors[key].instance.refresh(); // Refresh CodeMirror to ensure correct rendering
+                });
+                editors[tabName].container.classList.remove('hidden');
+                editors[tabName].instance.focus(); // Focus the editor
+                editors[tabName].instance.refresh(); // Ensure the active editor is refreshed
+            });
+        });
+
+        // Toggle editor visibility for small screens
+        toggleEditorBtn.addEventListener('click', () => {
+            isEditorOpen = !isEditorOpen; // Flip the state
+            updateLayout(); // Update the layout based on the new state
+        });
+
+        // Function to update the layout based on screen size and editor visibility
+        const updateLayout = () => {
+            if (window.innerWidth < 1024) { // Small screen (below lg breakpoint)
+                if (isEditorOpen) {
+                    editorPanel.classList.remove('hidden');
+                    outputPanel.classList.add('hidden');
+                    mainGrid.classList.remove('lg:grid-cols-2'); // Ensure single column layout
+                } else {
+                    editorPanel.classList.add('hidden');
+                    outputPanel.classList.remove('hidden');
+                    mainGrid.classList.remove('lg:grid-cols-2'); // Ensure single column layout
+                }
+            } else { // Large screen (lg breakpoint and above)
+                editorPanel.classList.remove('hidden'); // Always show editor
+                outputPanel.classList.remove('hidden'); // Always show output
+                mainGrid.classList.add('lg:grid-cols-2'); // Always two columns
+                isEditorOpen = true; // Ensure state is consistent with desktop view
+            }
+            // Refresh visible CodeMirror instances after layout change
+            Object.keys(editors).forEach(key => {
+                if (!editors[key].container.classList.contains('hidden')) {
+                    editors[key].instance.refresh();
+                }
+            });
+        };
+
+        // Listen for window resize to adjust layout
+        window.addEventListener('resize', updateLayout);
+
+        // Event listener for the run button
+        runBtn.addEventListener('click', runCode);
+
+        // Initial run on page load and set initial layout
+        window.onload = () => {
+            // Set initial active tab (HTML tab)
+            document.querySelector('.tab-button[data-tab="html"]').click();
+            runCode();
+            updateLayout();
+        };
+    </script>
+</body>
+</html>
