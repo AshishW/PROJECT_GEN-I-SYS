@@ -140,6 +140,20 @@ function connectSSE() {
     const message_from_server = JSON.parse(event.data);
     console.log("[AGENT TO CLIENT] ", message_from_server);
 
+    // Check for interrupt message first, this is high priority
+    if (message_from_server.interrupted && message_from_server.interrupted === true) {
+      if (audioPlayerNode) {
+        audioPlayerNode.port.postMessage({ command: "endOfAudio" });
+      }
+      return;
+    }
+
+    // If it's audio, play it, regardless of mode
+    if (message_from_server.mime_type == "audio/pcm" && audioPlayerNode) {
+      audioPlayerNode.port.postMessage(base64ToArray(message_from_server.data));
+      return; // Audio handled, no further processing needed for this chunk
+    }
+
     // If in code generation mode, buffer the response until the turn is complete
     if (isCodeGenMode) {
         // On the first data chunk, create a "Generating..." message
