@@ -34,7 +34,7 @@
 *   **Responsive Design**: A seamless experience across desktop and mobile devices, with touch gestures and responsive UI adjustments.
 *   **Efficient Audio Processing**: Utilizes `AudioWorklet` for high-performance, low-latency audio recording and playback in a separate thread.
 *   **Real-time Communication**: Leverages Server-Sent Events (SSE) to stream text and audio data from the backend for a fluid, conversational feel.
-*   **Interactive Code Sandbox**(experimental): A built-in code editor that allows you to write, edit, and run HTML, CSS, and JavaScript code directly in the browser with syntax highlighting and real-time preview.
+*   **Interactive Code Sandbox**: A built-in code editor that allows you to write, edit, and run HTML, CSS, and JavaScript code directly in the browser with syntax highlighting and real-time preview.
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 
@@ -137,10 +137,6 @@ Follow these steps to get the project running locally.
     ```
 
 5.  **Run the application:(after cd app)**
-    NOTE: For website generation feature, checkout the code-editor-feature branch:
-    ```sh
-    git checkout code-editor-feature
-    ```
     
     ```sh
     uvicorn main:app --reload
