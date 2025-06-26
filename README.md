@@ -34,11 +34,19 @@
 *   **Responsive Design**: A seamless experience across desktop and mobile devices, with touch gestures and responsive UI adjustments.
 *   **Efficient Audio Processing**: Utilizes `AudioWorklet` for high-performance, low-latency audio recording and playback in a separate thread.
 *   **Real-time Communication**: Leverages Server-Sent Events (SSE) to stream text and audio data from the backend for a fluid, conversational feel.
+*   **Interactive Code Sandbox**(experimental): A built-in code editor that allows you to write, edit, and run HTML, CSS, and JavaScript code directly in the browser with syntax highlighting and real-time preview.
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
+
 ### 🎥 Demo Video: Searching with chat
-note: (chat UI has been updated in latest version)
+
+note: (chat UI has been updated in latest version)  
 ![demo_search](app/static/assets/videos/searching_cake_recipe.gif)
+---
+
+### 🎥 Demo Video: creating websites with chat
+ 
+![code_editor_demo](app/static/assets/videos/code_editor_demo.gif)
 ---
 
 ### 🏛️ Architecture
@@ -75,7 +83,7 @@ The project is built with a modern client-server architecture:
 │   │   ├── assets/         # Images and sound effects
 │   │   ├── js/             # JavaScript modules
 │   │   │   ├── app.js      # Main application logic, SSE, audio handling
-│   │   │   ├── components.js # Sidebar components (Pomodoro, Tasklist)
+│   │   │   ├── components.js # Sidebar components (Pomodoro, Tasklist, settings)
 │   │   │   ├── audio-player.js
 │   │   │   ├── audio-recorder.js
 │   │   │   ├── pcm-player-processor.js # AudioWorklet for playback
@@ -129,6 +137,11 @@ Follow these steps to get the project running locally.
     ```
 
 5.  **Run the application:(after cd app)**
+    NOTE: For website generation feature, checkout the code-editor-feature branch:
+    ```sh
+    git checkout code-editor-feature
+    ```
+    
     ```sh
     uvicorn main:app --reload
     ```
