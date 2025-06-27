@@ -18,7 +18,7 @@
 
 ![settings](app/static/assets/videos/GENISYS_Settings.gif)
 
-![chatbot](app/static/assets/images/chat-UI.png)
+![chatbot](app/static/assets/images/weather_search_example.png)
 
 **GEN-I-SYS** (pronounced: GENISYS) is a sophisticated, voice-activated AI assistant featuring a futuristic, heads-up display (HUD) style interface. It's designed to be an interactive and productive companion, integrating powerful tools like a Pomodoro timer and a task manager directly into the experience. The application leverages real-time audio processing and streaming, combined with stunning 3D visualizations, to create a truly immersive user experience.
 
@@ -26,15 +26,23 @@
 
 ### ✨ Key Features
 
-*   **Real-time Voice Interaction**: Hands-free communication with the AI using browser-based SpeechRecognition and real-time audio streaming for responses.
+*   **Real-time Voice Interaction**: Enjoy hands-free communication with the AI through real-time audio streaming for responses. You can even interrupt it mid-conversation!
 *   **Immersive 3D Interface**: A dynamic particle sphere visualizes the AI's state, built with Three.js.
 *   **Dynamic Island Navigator**: A sleek, modern navigation hub for accessing integrated tools.
+![dynamic-island](app/static/assets/images/dynamic-island-example.png)
+
 *   **3D Pomodoro Timer**: A fully interactive hourglass with "energy sand" particles that correspond to the timer's progress.
+![pomodoro](app/static/assets/images/pomodoro.png)
+
 *   **3D Task List & Activity Matrix**: Manage your tasks with a 3D crystal visualization that pulses on updates, and track your productivity with a GitHub-style activity heatmap.
-*   **Responsive Design**: A seamless experience across desktop and mobile devices, with touch gestures and responsive UI adjustments.
+![tasklist](app/static/assets/images/tasks-todo.png)
+
 *   **Efficient Audio Processing**: Utilizes `AudioWorklet` for high-performance, low-latency audio recording and playback in a separate thread.
 *   **Real-time Communication**: Leverages Server-Sent Events (SSE) to stream text and audio data from the backend for a fluid, conversational feel.
 *   **Interactive Code Sandbox**: A built-in code editor that allows you to write, edit, and run HTML, CSS, and JavaScript code directly in the browser with syntax highlighting and real-time preview.
+![codesandbox](app/static/assets/images/code-generation-chat-example.png)
+![tictactoe](app/static/assets/images/code-editor-tictactoe.png)
+
 *   **Web Browsing**: Seamless integration with the BrowserUse library for real-time web search, content extraction, and analysis capabilities. **This works with both voice and chat mode**. 
 
 
@@ -61,12 +69,6 @@ The project is built with a modern client-server architecture:
     *   It provides API endpoints (`/send`, `/events`) to handle communication.
     *   The `ai_assistant` module processes user input and generates AI responses.
     *   Leverages Google ADK and BrowserUse for Agent workflows. 
-
-
-### 🏗️ High-Level Architecture
-
-![High-Level Architecture](app/static/assets/images/high-level-architecture.png)
-
 
 ---
 
