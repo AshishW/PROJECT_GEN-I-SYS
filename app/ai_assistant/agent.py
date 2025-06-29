@@ -11,11 +11,46 @@ from pydantic import SecretStr
 from dotenv import load_dotenv
 import os
 import asyncio
+import requests
 
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 client = genai.Client(api_key=GOOGLE_API_KEY)
+
+# message-tool
+async def ntfy_message_tool(message: str):
+  """
+  Sends a notification message to ntfy.sh service.
+  This asynchronous function sends a message to a specified ntfy.sh topic using POST request.
+  The message includes a customized title, default priority, and robot tag.
+  Args:
+    message (str): The message content to be sent to ntfy.sh
+  Returns:
+    str: Success message if the notification was sent successfully
+    str: Error message with details if the sending failed
+  Note:
+    - The ntfy.sh topic needs to be configured in the URL
+    - Message is encoded in UTF-8 before sending
+  """
+
+  try:
+    print("[SENDING_MESSAGE]: Using ntfy.sh")
+    requests.post(
+      f"https://ntfy.sh/{os.getenv('NTFY_TOPIC')}",  # Get topic from environment variable
+      data=str(message).encode(encoding='utf-8'),
+      headers={
+      "Title": "GENISYS Notification",
+      "Priority": "default",
+      "Tags": "robot"
+      }
+    )
+    print("[sent message]:✅ message sent")
+    return "Message sent successfully"
+  except Exception as e:
+    return f"Error sending message: {str(e)}"
+
+
 # Coding agent
 code_design_system = """
 {
@@ -436,14 +471,15 @@ def create_agent(persona="Friendly"):
         instruction=f"""
         {persona_prompt}
         You always talk in english unless otherwise prompted to talk in different language.
-        You are the root agent and these have two tools:
+        You are the root agent and these have three tools:
         1. google_search: Use google_search for general info and queries.
         2. For JS heavy browsing tasks or if asked to perform actions with browser, notify user that you will be opening the browser and use the browseruse_tool with proper instructions. Reply with results after the task is finished.
+        3. ntfy_message_tool: use this tool when asked to send a message to phone. this tool uses ntfy.sh. 
         
         For programming/coding tasks,
         {coding_prompt}
         """,
-        tools=[google_search, browseruse_tool]
+        tools=[google_search, browseruse_tool, ntfy_message_tool]
     )
 
 # Initialize with default persona
