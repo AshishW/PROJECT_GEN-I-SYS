@@ -130,7 +130,10 @@ Follow these steps to get the project running locally.
     ```sh
     GOOGLE_GENAI_USE_VERTEXAI=FALSE
     GOOGLE_API_KEY= <ADD_YOUR_GEMINI_API_KEY> 
+    NTFY_TOPIC=<ADD_YOUR_NTFY_TOPIC>
     ```
+    This application sends messages with [ntfy.sh](https://ntfy.sh/) for the send message feature. Topics are created dynamically when you publish or subscribe to them. If you don't sign up for a [ntfy.sh](https://ntfy.sh/) account, the topic acts as a password, so choose something unique and not easily guessable. 
+
 
 5.  **Run the application:(after cd app)**
     
