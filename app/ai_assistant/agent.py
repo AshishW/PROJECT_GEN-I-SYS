@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import os
 import asyncio
 import requests
+import aiohttp
 
 load_dotenv()
 
@@ -34,21 +35,31 @@ async def ntfy_message_tool(message: str):
     - Message is encoded in UTF-8 before sending
   """
 
+  topic = os.getenv("NTFY_TOPIC")
+  if not topic:
+    return "Error: NTFY_TOPIC environment variable not set."
+
+  url = f"https://ntfy.sh/{topic}"
+  headers = {
+        "Title": "GENISYS Notification",
+        "Priority": "default",
+        "Tags": "robot"
+  }
+
   try:
-    print("[SENDING_MESSAGE]: Using ntfy.sh")
-    requests.post(
-      f"https://ntfy.sh/{os.getenv('NTFY_TOPIC')}",  # Get topic from environment variable
-      data=str(message).encode(encoding='utf-8'),
-      headers={
-      "Title": "GENISYS Notification",
-      "Priority": "default",
-      "Tags": "robot"
-      }
-    )
-    print("[sent message]:✅ message sent")
-    return "Message sent successfully"
+      print("[SENDING_MESSAGE]: Using ntfy.sh")
+      async with aiohttp.ClientSession() as session:
+          async with session.post(url, data=message.encode("utf-8"), headers=headers) as response:
+              resp_text = await response.text()
+              if response.status == 200:
+                  print("[sent message]: ✅ Message sent")
+                  return "Message sent successfully"
+              else:
+                  return f"Error: Failed to send message (status code {response.status}): {resp_text}"
+
   except Exception as e:
-    return f"Error sending message: {str(e)}"
+      return f"Exception occurred while sending message: {str(e)}"
+
 
 
 # Coding agent
