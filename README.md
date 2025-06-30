@@ -33,6 +33,7 @@
 *   **3D Task List & Activity Matrix**: Manage your tasks with a 3D crystal visualization that pulses on updates, and track your productivity with a GitHub-style activity heatmap.
 *   **Efficient Audio Processing**: Utilizes `AudioWorklet` for high-performance, low-latency audio recording and playback in a separate thread.
 *   **Real-time Communication**: Leverages Server-Sent Events (SSE) to stream text and audio data from the backend for a fluid, conversational feel.
+*   **Notification System**: Seamlessly send and receive notifications across devices using ntfy.sh integration. Stay updated with important messages and alerts in real-time.
 *   **Interactive Code Sandbox**: A built-in code editor that allows you to write, edit, and run HTML, CSS, and JavaScript code directly in the browser with syntax highlighting and real-time preview.
 ![codesandbox](app/static/assets/images/code-generation-chat-example.png)
 ![tictactoe](app/static/assets/images/code-editor-tictactoe.png)
@@ -130,7 +131,10 @@ Follow these steps to get the project running locally.
     ```sh
     GOOGLE_GENAI_USE_VERTEXAI=FALSE
     GOOGLE_API_KEY= <ADD_YOUR_GEMINI_API_KEY> 
+    NTFY_TOPIC=<ADD_YOUR_NTFY_TOPIC>
     ```
+    This application sends messages with [ntfy.sh](https://ntfy.sh/) for the send message feature. Topics are created dynamically when you publish or subscribe to them. If you don't sign up for a [ntfy.sh](https://ntfy.sh/) account, the topic acts as a password, so choose something unique and not easily guessable. 
+
 
 5.  **Run the application:(after cd app)**
     
